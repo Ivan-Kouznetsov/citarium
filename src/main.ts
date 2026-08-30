@@ -17,11 +17,7 @@ type CitariumRPC = {
       saveProject: {
         params: { filepath: string; project: ProjectDict };
         response: { success: boolean; filepath?: string; error?: string };
-      };
-      getExampleProject: {
-        params: {};
-        response: { success: boolean; project?: ProjectDict; error?: string };
-      };
+      };     
     };
     messages: {};
   };

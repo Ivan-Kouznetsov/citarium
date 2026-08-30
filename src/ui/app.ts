@@ -1073,23 +1073,6 @@ export class CitariumApp {
     }
   }
 
-  async loadExampleProject(): Promise<void> {
-    try {
-      const res = await electrobun.rpc!.request.getExampleProject({});
-      if (res.success && res.project) {
-        this.project = Project.fromDict(res.project);
-        this.isDirty = false;
-        this.currentFilepath = "feline_behavior_annotated_bibliography.json";
-        this.selectedCitationId = null;
-        this.refreshAll();
-      } else {
-        console.warn("Example project not loaded:", res.error);
-      }
-    } catch (err) {
-      console.warn("Failed to load example via RPC", err);
-    }
-  }
-
   exportMarkdown(): void {
     const content = exportToMarkdown(this.project);
     this.downloadTextFile(content, `${this.project.title.toLowerCase().replace(/\s+/g, "_")}_annotated_bibliography.md`);

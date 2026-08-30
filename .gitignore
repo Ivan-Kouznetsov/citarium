@@ -1,0 +1,6 @@
+.cottontail-tmp/
+.hutch/
+build/
+node_modules/
+hutch.lock
+bun.lock

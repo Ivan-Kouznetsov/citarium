@@ -1,0 +1,244 @@
+{
+  "schema_version": "1.0",
+  "id": "proj-cat-ethology-2026",
+  "title": "Domestic Feline Behaviour, Cognition, and Human-Cat Attachment",
+  "author": "Ivan Kouznetsov",
+  "description": "An annotated bibliography examining social structures, vocalization mechanisms, environmental enrichment, and attachment bonds in domestic cats (Felis catus).",
+  "citation_style": "apa7",
+  "tags": [
+    "feline-ethology",
+    "cat-behaviour",
+    "human-animal-bond",
+    "animal-cognition",
+    "welfare"
+  ],
+  "target_word_count": 3000,
+  "created_at": "2026-08-20T10:00:00Z",
+  "updated_at": "2026-08-28T14:30:00Z",
+  "citations": [
+    {
+      "id": "cit-cat-001",
+      "entry_type": "journal_article",
+      "title": "Attachment bonds between domestic cats and humans",
+      "authors": [
+        {
+          "first_name": "Kristyn",
+          "middle_name": "R.",
+          "last_name": "Vitale"
+        },
+        {
+          "first_name": "Alexandra",
+          "middle_name": "C.",
+          "last_name": "Behnke"
+        },
+        {
+          "first_name": "Monique",
+          "middle_name": "A. R.",
+          "last_name": "Udell"
+        }
+      ],
+      "year": "2019",
+      "container_title": "Current Biology",
+      "volume": "29",
+      "issue": "18",
+      "pages": "R864-R865",
+      "doi": "10.1016/j.cub.2019.08.036",
+      "url": "https://doi.org/10.1016/j.cub.2019.08.036",
+      "annotation": {
+        "summary": "This empirical study applied the Ainsworth Strange Situation Test (SST) paradigm to domestic kittens and adult cats to evaluate human-cat attachment styles. The authors found that 64.3% of cats demonstrated secure attachment to their human caregivers, showing reduced stress and exploratory behavior in their presence, a proportion remarkably consistent with human infant attachment and canine attachment rates.",
+        "evaluation": "The methodology is rigorous and directly challenges the traditional misconception that domestic cats are entirely solitary and incapable of socio-emotional attachment to humans. The sample size of 70 kittens and 38 adult cats is robust for attachment biobehavioral assays.",
+        "relevance": "Serves as the cornerstone empirical citation for Chapter 1 on human-cat socio-cognitive bonds, disproving the aloofness stereotype with standardized attachment metrics.",
+        "quotes": [
+          {
+            "id": "q-cat-001",
+            "quote_text": "Like dogs and infants, cats show social flexibility in their attachment to human caretakers, with the majority forming secure attachment relationships.",
+            "page_number": "R864",
+            "location_type": "Paragraph",
+            "notes": "Key finding on secure attachment distribution"
+          },
+          {
+            "id": "q-cat-002",
+            "quote_text": "Attachment security was stable across developmental stages and remained consistent during follow-up testing in adulthood.",
+            "page_number": "R865",
+            "notes": "Stability of feline attachment styles"
+          }
+        ],
+        "tags": [
+          "attachment-theory",
+          "strange-situation",
+          "social-cognition"
+        ],
+        "status": "Key Source",
+        "rating": 5,
+        "general_notes": "Compare with Bradshaw (2013) on cat evolutionary history."
+      },
+      "created_at": "2026-08-20T10:15:00Z",
+      "updated_at": "2026-08-28T14:20:00Z"
+    },
+    {
+      "id": "cit-cat-002",
+      "entry_type": "book",
+      "title": "Cat Sense: How the New Feline Science Can Make You a Better Friend to Your Pet",
+      "authors": [
+        {
+          "first_name": "John",
+          "middle_name": "W. S.",
+          "last_name": "Bradshaw"
+        }
+      ],
+      "year": "2013",
+      "publisher": "Basic Books",
+      "annotation": {
+        "summary": "Anthozoologist John Bradshaw provides an evolutionary and behavioral analysis of the domestic cat, tracing their descent from the African wildcat (Felis lybica). The book explores feline sensory perception, territory marking, predatory instincts, and the challenges of indoor living in modern domestic environments.",
+        "evaluation": "Bradshaw synthesizes decades of feline ethology research into an accessible yet academically rigorous narrative. His insights into olfactory communication (scent-rubbing and pheromones) provide invaluable framework concepts.",
+        "relevance": "Provides the foundational evolutionary background for Chapter 2, detailing how solitary hunter origins influence multi-cat household dynamics.",
+        "quotes": [
+          {
+            "id": "q-cat-003",
+            "quote_text": "Cats still treat humans largely as though we are other, oversized cats who are surprisingly clumsy and possess an inexplicable abundance of food.",
+            "page_number": "78",
+            "notes": "Ethological perspective on interspecies perception"
+          }
+        ],
+        "tags": [
+          "evolution",
+          "scent-marking",
+          "domestication"
+        ],
+        "status": "Annotated",
+        "rating": 5,
+        "general_notes": "Essential reference for feline sensory biology."
+      },
+      "created_at": "2026-08-20T10:30:00Z",
+      "updated_at": "2026-08-28T14:22:00Z"
+    },
+    {
+      "id": "cit-cat-003",
+      "entry_type": "journal_article",
+      "title": "The cry embedded within the purr",
+      "authors": [
+        {
+          "first_name": "Karen",
+          "last_name": "McComb"
+        },
+        {
+          "first_name": "Anna",
+          "middle_name": "M.",
+          "last_name": "Taylor"
+        },
+        {
+          "first_name": "Christian",
+          "last_name": "Wilson"
+        },
+        {
+          "first_name": "Benjamin",
+          "middle_name": "D.",
+          "last_name": "Charlton"
+        }
+      ],
+      "year": "2009",
+      "container_title": "Current Biology",
+      "volume": "19",
+      "issue": "13",
+      "pages": "R507-R508",
+      "doi": "10.1016/j.cub.2009.05.033",
+      "url": "https://doi.org/10.1016/j.cub.2009.05.033",
+      "annotation": {
+        "summary": "This acoustic study investigated the 'solicitation purr' used by domestic cats when requesting food from human caretakers. Acoustic analysis revealed a high-frequency phonation component (resembling an infant distress cry, around 300–600 Hz) embedded within the low-frequency vibratory purr, which human listeners rated as significantly more urgent and less pleasant.",
+        "evaluation": "An ingenious experimental design combining harmonic acoustic analysis and playback experiments. Demonstrates acoustic exploitation of mammalian sensitivity to caregiving vocal signals.",
+        "relevance": "Key evidence for Chapter 3 on interspecies communication and acoustic signaling.",
+        "quotes": [
+          {
+            "id": "q-cat-004",
+            "quote_text": "The embedding of a high-frequency cry within a low-frequency purr is a subtle form of solicitation that is less likely to induce avoidance than a full meow.",
+            "page_number": "R508",
+            "notes": "Vocal modulation and human caregiving response"
+          }
+        ],
+        "tags": [
+          "vocalizations",
+          "purring",
+          "bioacoustics"
+        ],
+        "status": "Annotated",
+        "rating": 4,
+        "general_notes": "Relate to meow pitch adaptations."
+      },
+      "created_at": "2026-08-20T10:45:00Z",
+      "updated_at": "2026-08-28T14:24:00Z"
+    },
+    {
+      "id": "cit-cat-004",
+      "entry_type": "journal_article",
+      "title": "AAFP and ISFM feline environmental needs guidelines",
+      "authors": [
+        {
+          "first_name": "Sarah",
+          "middle_name": "L. H.",
+          "last_name": "Ellis"
+        },
+        {
+          "first_name": "Ilona",
+          "last_name": "Rodan"
+        },
+        {
+          "first_name": "Hazel",
+          "middle_name": "C.",
+          "last_name": "Carney"
+        },
+        {
+          "first_name": "Sarah",
+          "last_name": "Heath"
+        },
+        {
+          "first_name": "Irene",
+          "last_name": "Rochlitz"
+        },
+        {
+          "first_name": "Laura",
+          "middle_name": "Del",
+          "last_name": "Shearburn"
+        },
+        {
+          "first_name": "C. A. Tony",
+          "last_name": "Buffington"
+        },
+        {
+          "first_name": "Jodi",
+          "middle_name": "L.",
+          "last_name": "Westropp"
+        }
+      ],
+      "year": "2013",
+      "container_title": "Journal of Feline Medicine and Surgery",
+      "volume": "15",
+      "issue": "3",
+      "pages": "219-230",
+      "doi": "10.1177/1098612X13477537",
+      "url": "https://doi.org/10.1177/1098612X13477537",
+      "annotation": {
+        "summary": "Joint guidelines by the American Association of Feline Practitioners (AAFP) and International Society of Feline Medicine (ISFM) establishing the 'Five Pillars' of a healthy feline environment: providing a safe place, multiple separated key environmental resources, opportunities for play and predatory behavior, positive human-cat social interactions, and an environment that respects the cat's sense of smell.",
+        "evaluation": "The definitive clinical veterinary standard for feline environmental enrichment and welfare. Essential for understanding how stress reduction mitigates idiopathic cystitis and behavioral problems.",
+        "relevance": "Provides the structural framework for Chapter 4 on feline environmental design and welfare intervention.",
+        "quotes": [
+          {
+            "id": "q-cat-005",
+            "quote_text": "Understanding environmental needs is essential for addressing feline behavior problems, reducing stress-related disease, and optimizing health and welfare.",
+            "page_number": "219",
+            "notes": "Five pillars framework"
+          }
+        ],
+        "tags": [
+          "welfare-guidelines",
+          "environmental-enrichment",
+          "stress-reduction"
+        ],
+        "status": "Key Source",
+        "rating": 5,
+        "general_notes": "Clinical recommendations for shelter and home environments."
+      },
+      "created_at": "2026-08-20T11:00:00Z",
+      "updated_at": "2026-08-28T14:26:00Z"
+    }
+  ]
+}

@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Citarium — Annotated Bibliography & Research Manager</title>
+  <link rel="stylesheet" href="./styles/theme.css">
+</head>
+<body>
+
+  <!-- Top App Header / Window Toolbar with Native Tabs -->
+  <header class="app-header">
+    <!-- Workspace Tabs (Native Segmented Control) -->
+    <nav class="workspace-tabs" role="tablist">
+      <button id="tab-btn-refs" class="tab-btn active" role="tab" aria-selected="true" onclick="app.selectWorkspace('references')">References (1)</button>
+      <button id="tab-btn-bib" class="tab-btn" role="tab" aria-selected="false" onclick="app.selectWorkspace('bibliography')">Bibliography (2)</button>
+      <button id="tab-btn-overview" class="tab-btn" role="tab" aria-selected="false" onclick="app.selectWorkspace('overview')">Overview (3)</button>
+    </nav>
+  </header>
+
+  <!-- WORKSPACE 1: References (Master-Detail Split) -->
+  <main id="workspace-references" class="main-workspace active">
+    <div class="split-view">
+      
+      <!-- Sidebar / Master Citation List -->
+      <aside class="sidebar-panel">
+        <div class="sidebar-header">
+          <div class="sidebar-search-row">
+            <input type="text" id="search-input" class="form-input" placeholder="Search authors, titles, notes..." oninput="app.onSearchInput()">
+            <button class="btn btn-primary btn-sm" onclick="app.addCitation()">+ Add</button>
+          </div>
+          <div class="sidebar-filters-row">
+            <select id="filter-status" class="form-select" onchange="app.onFilterChange()">
+              <option value="All Statuses">All Statuses</option>
+              <option value="To Read">To Read</option>
+              <option value="Reading">Reading</option>
+              <option value="Annotated">Annotated</option>
+              <option value="Key Source">Key Source</option>
+              <option value="Review Later">Review Later</option>
+              <option value="Archived">Archived</option>
+            </select>
+            <select id="filter-tag" class="form-select" onchange="app.onFilterChange()">
+              <option value="All Tags">All Tags</option>
+            </select>
+            <select id="sort-select" class="form-select" onchange="app.onFilterChange()">
+              <option value="Author (A-Z)">Author (A-Z)</option>
+              <option value="Year (Newest)">Year (Newest)</option>
+              <option value="Year (Oldest)">Year (Oldest)</option>
+              <option value="Title (A-Z)">Title (A-Z)</option>
+              <option value="Rating (High-Low)">Rating</option>
+              <option value="Date Added">Date Added</option>
+            </select>
+          </div>
+        </div>
+
+        <ul id="citation-list" class="citation-list">
+          <!-- Populated dynamically -->
+        </ul>
+      </aside>
+
+      <!-- Detail Panel (Sub-tabs: Reference Form & Annotation Studio) -->
+      <section class="detail-panel">
+        <div class="sub-header">
+          <div class="sub-tabs">
+            <button id="sub-tab-ref" class="sub-tab-btn active" onclick="app.selectSubTab('reference')">Reference Details</button>
+            <button id="sub-tab-annot" class="sub-tab-btn" onclick="app.selectSubTab('annotation')">Annotation Studio</button>
+          </div>
+          <div>
+            <button class="btn btn-secondary btn-sm" onclick="app.duplicateCitation()">Duplicate</button>
+            <button class="btn btn-danger btn-sm" onclick="app.deleteCitation()">Delete</button>
+          </div>
+        </div>
+
+        <!-- SUB-TAB 1: Reference Form -->
+        <div id="sub-content-ref" class="detail-content">
+          <!-- Live APA 7 Preview Card -->
+          <div class="preview-card">
+            <div class="preview-card-title">APA 7th Edition Live Reference Preview</div>
+            <div id="preview-reference" class="preview-reference-text">No reference selected.</div>
+            <div id="preview-intext" class="preview-intext-text">In-text: (n.d.)</div>
+            <div class="preview-actions">
+              <button class="btn btn-secondary btn-sm" onclick="app.copyPreviewReference()">Copy Reference</button>
+              <button class="btn btn-secondary btn-sm" onclick="app.copyPreviewInText()">Copy In-Text</button>
+              <button class="btn btn-secondary btn-sm" onclick="app.copyPreviewBibTeX()">Copy BibTeX</button>
+            </div>
+          </div>
+
+          <!-- Reference Form Fields -->
+          <div class="form-group">
+            <label class="form-label">Source Type</label>
+            <select id="form-entry-type" class="form-select" onchange="app.onFieldChange('entryType')">
+              <option value="journal_article">Journal Article</option>
+              <option value="book">Book</option>
+              <option value="edited_book">Edited Book</option>
+              <option value="book_chapter">Book Chapter</option>
+              <option value="conference_paper">Conference Proceeding</option>
+              <option value="website">Webpage / Website</option>
+              <option value="report">Report / Working Paper</option>
+              <option value="dissertation">Dissertation / Thesis</option>
+              <option value="newspaper_article">Newspaper / Magazine</option>
+              <option value="other">Other / Generic</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <label id="lbl-authors" class="form-label">Authors</label>
+              <button class="btn btn-secondary btn-sm" style="margin-bottom: 4px;" onclick="app.openAuthorsDialog('authors')">Manage Authors...</button>
+            </div>
+            <input type="text" id="form-authors" class="form-input" placeholder="e.g. Kristyn Vitale; John Bradshaw; Karen McComb" oninput="app.onAuthorsInput()">
+          </div>
+
+          <div id="row-editors" class="form-group">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <label class="form-label">Editors</label>
+              <button class="btn btn-secondary btn-sm" style="margin-bottom: 4px;" onclick="app.openAuthorsDialog('editors')">Manage Editors...</button>
+            </div>
+            <input type="text" id="form-editors" class="form-input" placeholder="e.g. Dennis C. Turner; Patrick Bateson" oninput="app.onEditorsInput()">
+          </div>
+
+          <div class="form-group">
+            <label id="lbl-title" class="form-label">Article Title</label>
+            <input type="text" id="form-title" class="form-input" placeholder="Title of work" oninput="app.onFieldChange('title')">
+          </div>
+
+          <div class="form-row form-group">
+            <div style="flex: 1;">
+              <label class="form-label">Year</label>
+              <input type="text" id="form-year" class="form-input" placeholder="e.g. 2024" oninput="app.onFieldChange('year')">
+            </div>
+            <div style="flex: 1;">
+              <label class="form-label">Exact Date</label>
+              <input type="text" id="form-date" class="form-input" placeholder="e.g. January 15" oninput="app.onFieldChange('date')">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label id="lbl-container" class="form-label">Journal / Periodical Name</label>
+            <input type="text" id="form-container-title" class="form-input" placeholder="Name of container" oninput="app.onFieldChange('containerTitle')">
+          </div>
+
+          <div class="form-row form-group">
+            <div style="flex: 1;">
+              <label class="form-label">Volume</label>
+              <input type="text" id="form-volume" class="form-input" placeholder="Vol" oninput="app.onFieldChange('volume')">
+            </div>
+            <div style="flex: 1;">
+              <label class="form-label">Issue</label>
+              <input type="text" id="form-issue" class="form-input" placeholder="Issue" oninput="app.onFieldChange('issue')">
+            </div>
+            <div style="flex: 2;">
+              <label class="form-label">Pages</label>
+              <input type="text" id="form-pages" class="form-input" placeholder="e.g. 100-115" oninput="app.onFieldChange('pages')">
+            </div>
+          </div>
+
+          <div class="form-row form-group">
+            <div style="flex: 1;">
+              <label class="form-label">Publisher</label>
+              <input type="text" id="form-publisher" class="form-input" placeholder="e.g. MIT Press" oninput="app.onFieldChange('publisher')">
+            </div>
+            <div style="flex: 1;">
+              <label class="form-label">Institution</label>
+              <input type="text" id="form-institution" class="form-input" placeholder="e.g. Stanford University" oninput="app.onFieldChange('institution')">
+            </div>
+          </div>
+
+          <div class="form-row form-group">
+            <div style="flex: 1;">
+              <label class="form-label">DOI</label>
+              <input type="text" id="form-doi" class="form-input" placeholder="10.xxxx/yyyy" oninput="app.onFieldChange('doi')">
+            </div>
+            <div style="flex: 1;">
+              <label class="form-label">URL <span id="url-status-indicator"></span></label>
+              <input type="text" id="form-url" class="form-input" placeholder="https://..." oninput="app.onFieldChange('url')">
+            </div>
+          </div>
+
+          <div class="form-row form-group">
+            <div style="flex: 1;">
+              <label class="form-label">Edition</label>
+              <input type="text" id="form-edition" class="form-input" placeholder="e.g. 2nd ed." oninput="app.onFieldChange('edition')">
+            </div>
+            <div style="flex: 1;">
+              <label class="form-label">Report Number</label>
+              <input type="text" id="form-report-number" class="form-input" placeholder="e.g. arXiv:2401.xxxx" oninput="app.onFieldChange('reportNumber')">
+            </div>
+          </div>
+        </div>
+
+        <!-- SUB-TAB 2: Annotation Studio -->
+        <div id="sub-content-annot" class="detail-content" style="display: none;">
+          <!-- Metadata Bar -->
+          <div class="form-row form-group" style="background: var(--bg-panel); padding: 12px; border-radius: var(--platform-radius-md); border: 1px solid var(--border-subtle);">
+            <div style="flex: 1;">
+              <label class="form-label">Reading Status</label>
+              <select id="annot-status" class="form-select" onchange="app.onAnnotChange('status')">
+                <option value="To Read">To Read</option>
+                <option value="Reading">Reading</option>
+                <option value="Annotated">Annotated</option>
+                <option value="Key Source">Key Source</option>
+                <option value="Review Later">Review Later</option>
+                <option value="Archived">Archived</option>
+              </select>
+            </div>
+            <div style="flex: 1;">
+              <label class="form-label">Rating</label>
+              <select id="annot-rating" class="form-select" onchange="app.onAnnotChange('rating')">
+                <option value="0">No Rating</option>
+                <option value="1">★ 1 Star</option>
+                <option value="2">★★ 2 Stars</option>
+                <option value="3">★★★ 3 Stars</option>
+                <option value="4">★★★★ 4 Stars</option>
+                <option value="5">★★★★★ 5 Stars</option>
+              </select>
+            </div>
+            <div style="flex: 2;">
+              <label class="form-label">Tags (comma-separated)</label>
+              <input type="text" id="annot-tags" class="form-input" placeholder="e.g. alignment, policy, empirical" oninput="app.onAnnotChange('tags')">
+            </div>
+          </div>
+
+          <!-- Summary -->
+          <div class="form-group">
+            <label class="form-label">Summary & Synopsis</label>
+            <textarea id="annot-summary" class="form-textarea" rows="4" placeholder="Abstract, core arguments, and synthesis..." oninput="app.onAnnotChange('summary')"></textarea>
+          </div>
+
+          <!-- Critical Evaluation -->
+          <div class="form-group">
+            <label class="form-label">Critical Evaluation</label>
+            <textarea id="annot-evaluation" class="form-textarea" rows="3" placeholder="Methodological critique, strengths, limitations..." oninput="app.onAnnotChange('evaluation')"></textarea>
+          </div>
+
+          <!-- Project Relevance -->
+          <div class="form-group">
+            <label class="form-label">Relevance to Project</label>
+            <textarea id="annot-relevance" class="form-textarea" rows="3" placeholder="How this informs your hypothesis or chapter structure..." oninput="app.onAnnotChange('relevance')"></textarea>
+          </div>
+
+          <!-- General Notes -->
+          <div class="form-group">
+            <label class="form-label">General Scratchpad Notes</label>
+            <textarea id="annot-notes" class="form-textarea" rows="2" placeholder="Freeform scratchpad thoughts..." oninput="app.onAnnotChange('generalNotes')"></textarea>
+          </div>
+
+          <!-- Ideas & Quotes Table -->
+          <div class="form-group">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <label class="form-label" style="font-size: 13px; font-weight: 700;">Key Quotes & Ideas Database</label>
+              <button class="btn btn-primary btn-sm" onclick="app.openQuoteModal()">+ Add Idea</button>
+            </div>
+            <table class="ideas-table">
+              <thead>
+                <tr>
+                  <th style="width: 50%;">Quote / Idea</th>
+                  <th style="width: 20%;">Location</th>
+                  <th style="width: 20%;">Notes</th>
+                  <th style="width: 10%; text-align: right;">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="ideas-table-body">
+                <!-- Populated dynamically -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </section>
+    </div>
+  </main>
+
+  <!-- WORKSPACE 2: Compiled Bibliography -->
+  <main id="workspace-bibliography" class="main-workspace">
+    <div class="full-panel">
+      <div class="form-row form-group">
+        <label class="form-label" style="margin-bottom: 0; min-width: 100px;">Output Format:</label>
+        <select id="bib-view-format" class="form-select" style="max-width: 320px;" onchange="app.renderCompiledBibliography()">
+          <option value="apa7_standard">APA 7th Edition (Standard References)</option>
+          <option value="apa7_summary">APA 7th + Summary Only</option>
+          <option value="apa7_annotated">APA 7th + Full Annotated Bibliography</option>
+          <option value="bibtex">BibTeX Entries</option>
+        </select>
+        <button class="btn btn-primary btn-sm" onclick="app.copyCompiledBibliography()">Copy Formatted Text</button>
+      </div>
+
+      <textarea id="compiled-bibliography-text" class="form-textarea" style="flex: 1; font-family: var(--font-mono); font-size: 12px; line-height: 1.6;" readonly></textarea>
+    </div>
+  </main>
+
+  <!-- WORKSPACE 3: Project Overview -->
+  <main id="workspace-overview" class="main-workspace">
+    <div class="full-panel">
+      <div style="margin-bottom: 20px;">
+        <h2 id="overview-title" style="font-size: 20px; font-weight: 700; margin-bottom: 4px;">Project Overview</h2>
+        <div id="overview-author" style="font-size: 13px; color: var(--text-muted); margin-bottom: 4px;">Researcher: -</div>
+        <p id="overview-desc" style="font-size: 13px; color: var(--text-secondary);">Description: -</p>
+      </div>
+
+      <!-- Stat Cards -->
+      <div class="overview-grid">
+        <div class="stat-card">
+          <div class="stat-card-title">Citations</div>
+          <div id="stat-citations" class="stat-card-value">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-title">Annotation Words</div>
+          <div id="stat-words" class="stat-card-value">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-title">Quotes & Ideas</div>
+          <div id="stat-quotes" class="stat-card-value">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-title">Avg Source Rating</div>
+          <div id="stat-rating" class="stat-card-value">★ 0.0</div>
+        </div>
+      </div>
+
+      <!-- Tables Row -->
+      <div style="display: flex; gap: 20px; flex: 1;">
+        <div style="flex: 1; background: var(--bg-panel); padding: 14px; border-radius: var(--platform-radius-lg); border: 1px solid var(--border-subtle);">
+          <h3 style="font-size: 13px; font-weight: 700; margin-bottom: 10px;">Sources by Entry Type</h3>
+          <table class="ideas-table">
+            <thead>
+              <tr><th>Source Type</th><th>Count</th></tr>
+            </thead>
+            <tbody id="overview-type-table"></tbody>
+          </table>
+        </div>
+
+        <div style="flex: 1; background: var(--bg-panel); padding: 14px; border-radius: var(--platform-radius-lg); border: 1px solid var(--border-subtle);">
+          <h3 style="font-size: 13px; font-weight: 700; margin-bottom: 10px;">Sources by Reading Status</h3>
+          <table class="ideas-table">
+            <thead>
+              <tr><th>Status</th><th>Count</th></tr>
+            </thead>
+            <tbody id="overview-status-table"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- MODALS -->
+
+  <!-- Modal 1: Project & App Settings -->
+  <div id="modal-project" class="modal-overlay">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <div class="modal-title">Writing Project & App Settings</div>
+        <button class="btn btn-secondary btn-sm" onclick="app.closeModal('modal-project')">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group" style="background: var(--bg-subtle); padding: 10px 12px; border-radius: var(--platform-radius-md); margin-bottom: 14px;">
+          <label class="form-label">Theme Mode</label>
+          <select id="settings-theme-select" class="form-select" onchange="app.onThemeSelectChange(this.value)">
+            <option value="system">Auto (System Color Scheme)</option>
+            <option value="light">Light Mode</option>
+            <option value="dark">Dark Mode</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Project Title</label>
+          <input type="text" id="project-modal-title" class="form-input">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Author / Researcher</label>
+          <input type="text" id="project-modal-author" class="form-input">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Description / Topic Summary</label>
+          <textarea id="project-modal-desc" class="form-textarea" rows="3"></textarea>
+        </div>
+        <div class="form-row form-group">
+          <div style="flex: 2;">
+            <label class="form-label">Tags (comma-separated)</label>
+            <input type="text" id="project-modal-tags" class="form-input">
+          </div>
+          <div style="flex: 1;">
+            <label class="form-label">Target Word Count</label>
+            <input type="number" id="project-modal-words" class="form-input">
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary btn-sm" onclick="app.closeModal('modal-project')">Cancel</button>
+        <button class="btn btn-primary btn-sm" onclick="app.saveProjectSettings()">Save Settings</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 2: Manage Authors / Editors -->
+  <div id="modal-authors" class="modal-overlay">
+    <div class="modal-dialog" style="width: 680px;">
+      <div class="modal-header">
+        <div id="authors-modal-title" class="modal-title">Manage Contributors</div>
+        <button class="btn btn-secondary btn-sm" onclick="app.closeModal('modal-authors')">✕</button>
+      </div>
+      <div class="modal-body" style="display: flex; gap: 16px;">
+        <!-- Left Table -->
+        <div style="flex: 1; display: flex; flex-direction: column;">
+          <table class="ideas-table" style="margin-top: 0; flex: 1;">
+            <thead>
+              <tr><th>#</th><th>Name</th><th>APA 7</th></tr>
+            </thead>
+            <tbody id="authors-table-body"></tbody>
+          </table>
+          <div style="display: flex; gap: 6px; margin-top: 8px;">
+            <button class="btn btn-secondary btn-sm" onclick="app.moveAuthorUp()">Up</button>
+            <button class="btn btn-secondary btn-sm" onclick="app.moveAuthorDown()">Down</button>
+            <button class="btn btn-danger btn-sm" onclick="app.removeAuthor()">Remove</button>
+          </div>
+        </div>
+
+        <!-- Right Form -->
+        <div style="width: 260px; background: var(--bg-subtle); padding: 12px; border-radius: var(--platform-radius-md);">
+          <div style="margin-bottom: 8px;">
+            <label><input type="checkbox" id="author-is-org" onchange="app.toggleAuthorOrgMode()"> Corporate / Organization</label>
+          </div>
+          <div id="author-person-fields">
+            <div class="form-group">
+              <label class="form-label">First Name</label>
+              <input type="text" id="author-first" class="form-input">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Middle Name / Inits</label>
+              <input type="text" id="author-middle" class="form-input">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Last Name (Surname)</label>
+              <input type="text" id="author-last" class="form-input">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Suffix (Jr., III)</label>
+              <input type="text" id="author-suffix" class="form-input">
+            </div>
+          </div>
+          <div id="author-org-fields" style="display: none;">
+            <div class="form-group">
+              <label class="form-label">Organization Name</label>
+              <input type="text" id="author-org-name" class="form-input">
+            </div>
+          </div>
+          <div style="display: flex; gap: 6px;">
+            <button class="btn btn-primary btn-sm" style="flex: 1;" onclick="app.addAuthorToList()">+ Add</button>
+            <button class="btn btn-secondary btn-sm" style="flex: 1;" onclick="app.updateAuthorInList()">Update</button>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary btn-sm" onclick="app.closeModal('modal-authors')">Cancel</button>
+        <button class="btn btn-primary btn-sm" onclick="app.applyAuthorsModal()">Apply & Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 3: Import BibTeX -->
+  <div id="modal-import" class="modal-overlay">
+    <div class="modal-dialog" style="width: 580px;">
+      <div class="modal-header">
+        <div class="modal-title">Import BibTeX Citations</div>
+        <button class="btn btn-secondary btn-sm" onclick="app.closeModal('modal-import')">✕</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size: 12px; color: var(--text-secondary); margin-bottom: 10px;">Paste raw BibTeX entries below to parse and import into your project.</p>
+        <textarea id="import-bibtex-text" class="form-textarea" rows="8" placeholder="@article{...}"></textarea>
+        <div id="import-summary-label" style="font-size: 12px; margin-top: 8px; color: var(--text-muted);">Ready to parse.</div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary btn-sm" onclick="app.previewBibtexImport()">Preview</button>
+        <button class="btn btn-secondary btn-sm" onclick="app.closeModal('modal-import')">Cancel</button>
+        <button class="btn btn-primary btn-sm" onclick="app.confirmBibtexImport()">Import into Project</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 4: Quote / Idea Dialog -->
+  <div id="modal-quote" class="modal-overlay">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <div id="quote-modal-title" class="modal-title">Add Idea / Quote</div>
+        <button class="btn btn-secondary btn-sm" onclick="app.closeModal('modal-quote')">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Idea or Direct Quote Text</label>
+          <textarea id="quote-modal-text" class="form-textarea" rows="4" placeholder="Enter key insight or quote..."></textarea>
+        </div>
+        <div class="form-row form-group">
+          <div style="flex: 1;">
+            <label class="form-label">Location Type</label>
+            <select id="quote-modal-loc-type" class="form-select">
+              <option value="Page">Page</option>
+              <option value="Paragraph">Paragraph</option>
+            </select>
+          </div>
+          <div style="flex: 1;">
+            <label class="form-label">Location #</label>
+            <input type="text" id="quote-modal-page" class="form-input" placeholder="e.g. 42">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Context / Relevance Notes</label>
+          <input type="text" id="quote-modal-notes" class="form-input" placeholder="e.g. Support for Section 2.1">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary btn-sm" onclick="app.closeModal('modal-quote')">Cancel</button>
+        <button class="btn btn-primary btn-sm" onclick="app.saveQuoteModal()">Save Idea</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 5: APA 7 Quick Guide -->
+  <div id="modal-guide" class="modal-overlay">
+    <div class="modal-dialog" style="width: 600px;">
+      <div class="modal-header">
+        <div class="modal-title">APA 7th Edition Quick Reference Guide</div>
+        <button class="btn btn-secondary btn-sm" onclick="app.closeModal('modal-guide')">✕</button>
+      </div>
+      <div class="modal-body" style="font-size: 12px; line-height: 1.6;">
+        <h4 style="margin-bottom: 4px;">1. Journal Articles:</h4>
+        <p style="color: var(--text-secondary); margin-bottom: 12px;">Author, A. A., & Author, B. B. (Year). Title of article in sentence case. <em>Title of Periodical in Title Case</em>, <em>volume</em>(issue), pages. https://doi.org/xxxx</p>
+
+        <h4 style="margin-bottom: 4px;">2. Books:</h4>
+        <p style="color: var(--text-secondary); margin-bottom: 12px;">Author, A. A. (Year). <em>Title of work in sentence case</em> (edition). Publisher. https://doi.org/xxxx</p>
+
+        <h4 style="margin-bottom: 4px;">3. Book Chapters:</h4>
+        <p style="color: var(--text-secondary); margin-bottom: 12px;">Author, A. A. (Year). Title of chapter. In E. E. Editor (Ed.), <em>Title of book</em> (pp. xx-xx). Publisher.</p>
+
+        <h4 style="margin-bottom: 4px;">4. In-Text Citations:</h4>
+        <p style="color: var(--text-secondary);">
+          • 1 Author: <code>(Smith, 2020)</code> or <code>Smith (2020)</code><br>
+          • 2 Authors: <code>(Smith & Jones, 2020)</code> or <code>Smith and Jones (2020)</code><br>
+          • 3+ Authors: <code>(Smith et al., 2020)</code> or <code>Smith et al. (2020)</code>
+        </p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-primary btn-sm" onclick="app.closeModal('modal-guide')">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Hidden File Input for Open Project -->
+  <input type="file" id="hidden-file-input" accept=".json,.citarium" style="display: none;" onchange="app.onFileInputSelected(event)">
+
+  <script type="module" src="index.js"></script>
+</body>
+</html>

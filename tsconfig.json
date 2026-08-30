@@ -1,0 +1,36 @@
+{
+  "compilerOptions": {
+    "target": "ES2023",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "declaration": false,
+    "declarationMap": false,
+    "sourceMap": true,
+    "outDir": "./dist",
+    "rootDir": ".",
+    "baseUrl": ".",
+    "paths": {
+      "electrobun": [".hutch/devkit/api/sdks/main/index.ts"],
+      "electrobun/main": [".hutch/devkit/api/sdks/main/index.ts"],
+      "electrobun/bun": [".hutch/devkit/api/sdks/main/index.ts"],
+      "electrobun/view": [".hutch/devkit/api/browser/index.ts"],
+      "electrobun/rpc": [".hutch/devkit/api/sdks/main/entries/rpc.ts"],
+      "electrobun/main/*": [".hutch/devkit/api/sdks/main/entries/*.ts"],
+      "electrobun/bun/*": [".hutch/devkit/api/sdks/main/entries/*.ts"],
+      "electrobun/browser/*": [".hutch/devkit/api/browser/*.ts"],
+      "electrobun/*": [".hutch/devkit/api/sdks/main/entries/*.ts", ".hutch/devkit/api/*"],
+      "@models/*": ["src/models/*"],
+      "@formatters/*": ["src/formatters/*"],
+      "@io/*": ["src/io/*"],
+      "@utils/*": ["src/utils/*"]
+    },
+    "types": ["bun-types"]
+  },
+  "include": ["src/**/*.ts", "tests/**/*.ts"],
+  "exclude": ["node_modules", "dist"]
+}

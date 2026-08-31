@@ -3,8 +3,8 @@ import type { ElectrobunConfig } from "electrobun";
 export default {
 	app: {
 		name: "Citarium",
-		identifier: "dev.citarium.app",
-		version: "1.0.0",
+		identifier: "ca.ivank.app.citarium",
+		version: "0.1.0",
 	},
 	build: {
 		mainProcess: "cottontail",

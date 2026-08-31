@@ -1,6 +1,6 @@
 {
   "name": "citarium",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "Annotated Bibliography and Writing Project Manager (APA 7th Edition)",
   "type": "module",
   "scripts": {
@@ -18,9 +18,9 @@
     "zod": "3.23.0"
   },
   "devDependencies": {
-    "@playwright/test": "^1.46.0",
-    "@types/bun": "latest",
-    "typescript": "^5.5.2"
+    "@playwright/test": "1.46.0",
+    "@types/bun": "1.4.0",
+    "typescript": "5.5.2"
   },
   "license": "AGPL-3.0"
 }

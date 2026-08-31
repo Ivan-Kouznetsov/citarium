@@ -10,6 +10,11 @@ test.describe("OS Modals, File Choosers, Native Dialogs, and OS Actions", () => 
   });
 
   test("OS File Open Dialog: Triggering file chooser and loading project JSON", async ({ page }) => {
+    // Disable showOpenFilePicker to test HTML file input chooser fallback
+    await page.evaluate(() => {
+      delete (window as any).showOpenFilePicker;
+    });
+
     // Listen for file chooser event
     const fileChooserPromise = page.waitForEvent("filechooser");
     await page.evaluate(() => (window as any).app.openProjectFileDialog());

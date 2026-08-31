@@ -24,6 +24,7 @@ export class CitariumApp {
   currentSubTab: "reference" | "annotation" = "reference";
   isDirty: boolean = false;
   currentFilepath: string | null = null;
+  currentFileHandle: any = null;
 
   currentPlatform: "mac" | "windows" | "linux" = "mac";
   currentTheme: "system" | "light" | "dark" = "light";
@@ -973,12 +974,44 @@ export class CitariumApp {
       description: "Annotated bibliography and research reference repository.",
     });
     this.currentFilepath = null;
+    this.currentFileHandle = null;
     this.isDirty = false;
     this.selectedCitationId = null;
     this.refreshAll();
   }
 
   async openProjectFileDialog(): Promise<void> {
+    if (typeof (window as any).showOpenFilePicker === "function") {
+      try {
+        const [handle] = await (window as any).showOpenFilePicker({
+          types: [
+            {
+              description: "Citarium Project (*.json)",
+              accept: { "application/json": [".json"] },
+            },
+          ],
+          multiple: false,
+        });
+        if (handle) {
+          const file = await handle.getFile();
+          const text = await file.text();
+          const data = JSON.parse(text);
+          this.project = Project.fromDict(data);
+          this.currentFilepath = file.name;
+          this.currentFileHandle = handle;
+          this.isDirty = false;
+          this.selectedCitationId = this.project.citations.length > 0 ? this.project.citations[0].id : null;
+          this.refreshAll();
+          return;
+        }
+      } catch (err: any) {
+        if (err?.name === "AbortError") {
+          return;
+        }
+        console.warn("showOpenFilePicker failed, falling back to file input:", err);
+      }
+    }
+
     const input = document.getElementById("hidden-file-input") as HTMLInputElement;
     if (input) {
       input.value = "";
@@ -998,6 +1031,7 @@ export class CitariumApp {
         const data = JSON.parse(text);
         this.project = Project.fromDict(data);
         this.currentFilepath = filepath;
+        this.currentFileHandle = null;
         this.isDirty = false;
         this.selectedCitationId = this.project.citations.length > 0 ? this.project.citations[0].id : null;
         this.refreshAll();
@@ -1018,6 +1052,7 @@ export class CitariumApp {
         const data = await resp.json();
         this.project = Project.fromDict(data);
         this.currentFilepath = "feline_behavior_annotated_bibliography.json";
+        this.currentFileHandle = null;
         this.isDirty = false;
         this.selectedCitationId = this.project.citations.length > 0 ? this.project.citations[0].id : null;
         this.refreshAll();
@@ -1028,30 +1063,53 @@ export class CitariumApp {
   }
 
   async saveProjectToFile(): Promise<void> {
-    try {
-      const res = await electrobun.rpc?.request?.saveProject?.({
-        filepath: this.currentFilepath || "",
-        project: this.project.toDict(),
-      });
-      if (res?.success) {
+    const content = JSON.stringify(this.project.toDict(), null, 2);
+
+    // 1. If an active FileHandle exists (from showOpenFilePicker or previous showSaveFilePicker), write directly to it
+    if (this.currentFileHandle && typeof this.currentFileHandle.createWritable === "function") {
+      try {
+        const writable = await this.currentFileHandle.createWritable();
+        await writable.write(content);
+        await writable.close();
         this.isDirty = false;
-        this.currentFilepath = res.filepath || this.currentFilepath;
         this.updateProjectBadge();
         return;
+      } catch (err: any) {
+        console.warn("Writing to currentFileHandle failed, falling back to save dialog:", err);
+        this.currentFileHandle = null;
       }
-    } catch (err: any) {
-      console.warn("Backend save failed, trying fallback dialog:", err);
     }
 
+    // 2. If backend RPC save is available with an absolute path
+    if (this.currentFilepath && (this.currentFilepath.includes("/") || this.currentFilepath.includes("\\"))) {
+      try {
+        const res = await electrobun.rpc?.request?.saveProject?.({
+          filepath: this.currentFilepath,
+          project: this.project.toDict(),
+        });
+        if (res?.success) {
+          this.isDirty = false;
+          this.currentFilepath = res.filepath || this.currentFilepath;
+          this.updateProjectBadge();
+          return;
+        }
+      } catch (err: any) {
+        console.warn("Backend save failed:", err);
+      }
+    }
+
+    // 3. Prompt user with Save dialog (File System Access API or browser download)
     try {
-      const content = JSON.stringify(this.project.toDict(), null, 2);
       const filename = this.currentFilepath || `${this.project.title.toLowerCase().replace(/\s+/g, "_")}.json`;
-      await this.saveTextFileWithDialog(content, filename, [
+      const handle = await this.saveTextFileWithDialog(content, filename, [
         {
           description: "Citarium Project (*.json)",
           accept: { "application/json": [".json"] },
         },
       ]);
+      if (handle) {
+        this.currentFileHandle = handle;
+      }
       this.isDirty = false;
       this.updateProjectBadge();
     } catch (err: any) {
@@ -1096,7 +1154,7 @@ export class CitariumApp {
     content: string,
     suggestedName: string,
     types: Array<{ description: string; accept: Record<string, string[]> }>
-  ): Promise<void> {
+  ): Promise<any> {
     if (typeof (window as any).showSaveFilePicker === "function") {
       try {
         const handle = await (window as any).showSaveFilePicker({
@@ -1106,11 +1164,11 @@ export class CitariumApp {
         const writable = await handle.createWritable();
         await writable.write(content);
         await writable.close();
-        return;
+        return handle;
       } catch (err: any) {
         if (err?.name === "AbortError") {
           // User cancelled the save dialog
-          return;
+          return null;
         }
         console.warn("showSaveFilePicker failed, falling back to download:", err);
       }
@@ -1126,6 +1184,7 @@ export class CitariumApp {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
+    return null;
   }
 
   // --- Modal Helpers ---

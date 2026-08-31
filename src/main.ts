@@ -41,10 +41,12 @@ const citariumRPC = BrowserView.defineRPC<CitariumRPC>({
       },
       saveProject: async ({ filepath, project }) => {
         try {
-          const defaultPath = filepath || join(ROOT_DIR, "project.json");
+          if (!filepath) {
+            return { success: false, error: "No filepath provided" };
+          }
           const p = Project.fromDict(project);
-          await saveProject(p, defaultPath);
-          return { success: true, filepath: defaultPath };
+          await saveProject(p, filepath);
+          return { success: true, filepath };
         } catch (err: any) {
           return { success: false, error: err.message };
         }

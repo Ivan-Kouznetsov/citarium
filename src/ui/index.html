@@ -8,6 +8,12 @@
   <link rel="stylesheet" href="./styles/theme.css">
   <script>
     (function () {
+      if (!window.__electrobun) {
+        window.__electrobun = {
+          receiveMessageFromHost: function () {},
+          bun: {},
+        };
+      }
       var params = new URLSearchParams(window.location.search);
       var platform = params.get("platform") || "windows";
       document.documentElement.setAttribute("data-platform", platform);

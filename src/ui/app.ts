@@ -26,7 +26,7 @@ export class CitariumApp {
   currentFilepath: string | null = null;
 
   currentPlatform: "mac" | "windows" | "linux" = "mac";
-  currentTheme: "system" | "light" | "dark" = "system";
+  currentTheme: "system" | "light" | "dark" = "light";
 
   apa7 = new APA7Formatter();
   urlChecker = new AsyncURLChecker();
@@ -57,8 +57,7 @@ export class CitariumApp {
     this.currentPlatform = this.detectPlatform();
     document.documentElement.setAttribute("data-platform", this.currentPlatform);
 
-    const savedTheme = (localStorage.getItem("citarium_theme") as any) || "system";
-    this.applyTheme(savedTheme);
+    this.applyTheme("light");
 
     // Initial render
     this.refreshAll();
@@ -70,16 +69,17 @@ export class CitariumApp {
   }
 
   applyTheme(theme: "system" | "light" | "dark"): void {
-    this.currentTheme = theme;
-    if (theme === "system") {
-      document.documentElement.removeAttribute("data-theme");
-    } else {
-      document.documentElement.setAttribute("data-theme", theme);
-    }
+    this.currentTheme = theme === "dark" ? "dark" : "light";
+    document.documentElement.setAttribute("data-theme", this.currentTheme);
 
     try {
-      localStorage.setItem("citarium_theme", theme);
+      localStorage.setItem("citarium_theme", this.currentTheme);
     } catch {}
+  }
+
+  toggleTheme(): void {
+    const nextTheme = this.currentTheme === "dark" ? "light" : "dark";
+    this.applyTheme(nextTheme);
   }
 
   // Native Desktop Dropdown Menus
@@ -990,45 +990,72 @@ export class CitariumApp {
     const input = e.target as HTMLInputElement;
     if (!input.files || input.files.length === 0) return;
     const file = input.files[0];
-    const filepath = file.name; // In a real native app we'd use native dialogs
+    const filepath = file.name;
     const reader = new FileReader();
-    reader.onload = async (ev) => {
+    reader.onload = (ev) => {
       try {
         const text = ev.target?.result as string;
         const data = JSON.parse(text);
-        
-        // Inform backend
-        const res = await electrobun.rpc!.request.saveProject({ filepath, project: data });
-        if (!res.success) throw new Error(res.error);
-
         this.project = Project.fromDict(data);
         this.currentFilepath = filepath;
         this.isDirty = false;
-        this.selectedCitationId = null;
+        this.selectedCitationId = this.project.citations.length > 0 ? this.project.citations[0].id : null;
         this.refreshAll();
       } catch (err: any) {
-        alert(`Failed to load project: ${err.message}`);
+        console.error("Failed to load project:", err);
       }
+    };
+    reader.onerror = (err) => {
+      console.error("FileReader error:", err);
     };
     reader.readAsText(file);
   }
 
+  async loadExampleProject(): Promise<void> {
+    try {
+      const resp = await fetch("/examples/feline_behavior_annotated_bibliography.json");
+      if (resp.ok) {
+        const data = await resp.json();
+        this.project = Project.fromDict(data);
+        this.currentFilepath = "feline_behavior_annotated_bibliography.json";
+        this.isDirty = false;
+        this.selectedCitationId = this.project.citations.length > 0 ? this.project.citations[0].id : null;
+        this.refreshAll();
+      }
+    } catch (e) {
+      console.error("Failed to load example project:", e);
+    }
+  }
+
   async saveProjectToFile(): Promise<void> {
     try {
-      const res = await electrobun.rpc!.request.saveProject({
+      const res = await electrobun.rpc?.request?.saveProject?.({
         filepath: this.currentFilepath || "",
         project: this.project.toDict(),
       });
-      if (res.success) {
+      if (res?.success) {
         this.isDirty = false;
         this.currentFilepath = res.filepath || this.currentFilepath;
         this.updateProjectBadge();
-        alert("Project saved successfully.");
-      } else {
-        alert(`Failed to save project: ${res.error}`);
+        return;
       }
     } catch (err: any) {
-      alert(`Failed to save project: ${err.message}`);
+      console.warn("Backend save failed, trying fallback dialog:", err);
+    }
+
+    try {
+      const content = JSON.stringify(this.project.toDict(), null, 2);
+      const filename = this.currentFilepath || `${this.project.title.toLowerCase().replace(/\s+/g, "_")}.json`;
+      await this.saveTextFileWithDialog(content, filename, [
+        {
+          description: "Citarium Project (*.json)",
+          accept: { "application/json": [".json"] },
+        },
+      ]);
+      this.isDirty = false;
+      this.updateProjectBadge();
+    } catch (err: any) {
+      console.error("Failed to save project:", err);
     }
   }
 

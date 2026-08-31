@@ -9,8 +9,12 @@
   <script>
     (function () {
       var params = new URLSearchParams(window.location.search);
-      var platform = params.get("platform");
+      var platform = params.get("platform") || "windows";
       document.documentElement.setAttribute("data-platform", platform);
+      document.documentElement.setAttribute("data-theme", "light");
+      try {
+        localStorage.setItem("citarium_theme", "light");
+      } catch (e) {}
       var link = document.createElement("link");
       link.rel = "stylesheet";
       link.id = "platform-stylesheet";

@@ -103,6 +103,8 @@ ApplicationMenu.setApplicationMenu([
       { label: "Bibliography", accelerator: "CmdOrCtrl+2", action: "view-bibliography" },
       { label: "Overview", accelerator: "CmdOrCtrl+3", action: "view-overview" },
       { type: "divider" },
+      { label: "Toggle Theme (Light / Dark)", accelerator: "CmdOrCtrl+T", action: "toggle-theme" },
+      { type: "divider" },
       { role: "toggleFullScreen" },
     ],
   },
@@ -159,6 +161,7 @@ ApplicationMenu.on("application-menu-clicked", (event: any) => {
     "view-references": "window.app?.selectWorkspace('references')",
     "view-bibliography": "window.app?.selectWorkspace('bibliography')",
     "view-overview": "window.app?.selectWorkspace('overview')",
+    "toggle-theme": "window.app?.toggleTheme()",
     "open-guide": "window.app?.openGuideDialog()",
   };
 

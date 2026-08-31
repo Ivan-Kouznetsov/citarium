@@ -55,51 +55,49 @@
   --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.14);
 }
 
-[data-platform="mac"][data-theme="dark"],
-@media (prefers-color-scheme: dark) {
-  [data-platform="mac"]:not([data-theme="light"]) {
-    --bg-window: #1e1e1e;
-    --bg-header: rgba(40, 40, 40, 0.85);
-    --bg-panel: #252526;
-    --bg-sidebar: rgba(30, 30, 30, 0.85);
-    --bg-subtle: rgba(255, 255, 255, 0.06);
-    --bg-hover: rgba(255, 255, 255, 0.08);
-    --bg-selected: #0a84ff;
-    --bg-selected-text: #ffffff;
-    --bg-selected-subtle: rgba(10, 132, 255, 0.2);
+[data-platform="mac"][data-theme="dark"] {
+  --bg-window: #1e1e1e;
+  --bg-header: rgba(40, 40, 40, 0.85);
+  --bg-panel: #252526;
+  --bg-sidebar: rgba(30, 30, 30, 0.85);
+  --bg-subtle: rgba(255, 255, 255, 0.06);
+  --bg-hover: rgba(255, 255, 255, 0.08);
+  --bg-selected: #0a84ff;
+  --bg-selected-text: #ffffff;
+  --bg-selected-subtle: rgba(10, 132, 255, 0.2);
 
-    --text-primary: #f5f5f7;
-    --text-secondary: #a1a1a6;
-    --text-muted: #6e6e73;
-    --text-inverse: #ffffff;
+  --text-primary: #f5f5f7;
+  --text-secondary: #a1a1a6;
+  --text-muted: #6e6e73;
+  --text-inverse: #ffffff;
 
-    --border-subtle: rgba(255, 255, 255, 0.12);
-    --border-input: rgba(255, 255, 255, 0.2);
-    --border-focus: #0a84ff;
-    --focus-ring: 0 0 0 3.5px rgba(10, 132, 255, 0.4);
+  --border-subtle: rgba(255, 255, 255, 0.12);
+  --border-input: rgba(255, 255, 255, 0.2);
+  --border-focus: #0a84ff;
+  --focus-ring: 0 0 0 3.5px rgba(10, 132, 255, 0.4);
 
-    --accent-color: #0a84ff;
-    --accent-hover: #339aff;
-    --accent-active: #0071e3;
+  --accent-color: #0a84ff;
+  --accent-hover: #339aff;
+  --accent-active: #0071e3;
 
-    --btn-primary-bg: #0a84ff;
-    --btn-primary-hover: #2691ff;
-    --btn-primary-active: #0071e3;
-    --btn-primary-text: #ffffff;
-    --btn-primary-shadow: 0 1px 3px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  --btn-primary-bg: #0a84ff;
+  --btn-primary-hover: #2691ff;
+  --btn-primary-active: #0071e3;
+  --btn-primary-text: #ffffff;
+  --btn-primary-shadow: 0 1px 3px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.25);
 
-    --btn-secondary-bg: rgba(255, 255, 255, 0.1);
-    --btn-secondary-hover: rgba(255, 255, 255, 0.16);
-    --btn-secondary-active: rgba(255, 255, 255, 0.08);
-    --btn-secondary-border: rgba(255, 255, 255, 0.16);
-    --btn-secondary-text: #f5f5f7;
-    --btn-secondary-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --btn-secondary-bg: rgba(255, 255, 255, 0.1);
+  --btn-secondary-hover: rgba(255, 255, 255, 0.16);
+  --btn-secondary-active: rgba(255, 255, 255, 0.08);
+  --btn-secondary-border: rgba(255, 255, 255, 0.16);
+  --btn-secondary-text: #f5f5f7;
+  --btn-secondary-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 
-    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
-    --shadow-md: 0 6px 16px rgba(0, 0, 0, 0.4);
-    --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.55);
-  }
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 6px 16px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.55);
 }
+
 
 /* --- macOS Specific Component Styles --- */
 
@@ -183,12 +181,9 @@
   -webkit-app-region: no-drag;
 }
 
-[data-platform="mac"][data-theme="dark"] .workspace-tabs,
-@media (prefers-color-scheme: dark) {
-  [data-platform="mac"]:not([data-theme="light"]) .workspace-tabs {
-    background: rgba(255, 255, 255, 0.08);
-    border-color: rgba(255, 255, 255, 0.08);
-  }
+[data-platform="mac"][data-theme="dark"] .workspace-tabs {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.08);
 }
 
 [data-platform="mac"] .tab-btn {
@@ -354,12 +349,10 @@
   background-clip: padding-box;
 }
 
-[data-platform="mac"][data-theme="dark"] ::-webkit-scrollbar-thumb,
-@media (prefers-color-scheme: dark) {
-  [data-platform="mac"]:not([data-theme="light"]) ::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.25);
-  }
-  [data-platform="mac"]:not([data-theme="light"]) ::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.4);
-  }
+[data-platform="mac"][data-theme="dark"] ::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+[data-platform="mac"][data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.4);
 }

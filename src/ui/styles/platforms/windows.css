@@ -55,51 +55,49 @@
   --shadow-lg: 0 14px 28px rgba(0, 0, 0, 0.18);
 }
 
-[data-platform="windows"][data-theme="dark"],
-@media (prefers-color-scheme: dark) {
-  [data-platform="windows"]:not([data-theme="light"]) {
-    --bg-window: #202020;
-    --bg-header: #2c2c2c;
-    --bg-panel: #2b2b2b;
-    --bg-sidebar: #242424;
-    --bg-subtle: #333333;
-    --bg-hover: #3a3a3a;
-    --bg-selected: #333333;
-    --bg-selected-text: #60cdff;
-    --bg-selected-subtle: #273b4d;
+[data-platform="windows"][data-theme="dark"] {
+  --bg-window: #202020;
+  --bg-header: #2c2c2c;
+  --bg-panel: #2b2b2b;
+  --bg-sidebar: #242424;
+  --bg-subtle: #333333;
+  --bg-hover: #3a3a3a;
+  --bg-selected: #333333;
+  --bg-selected-text: #60cdff;
+  --bg-selected-subtle: #273b4d;
 
-    --text-primary: #ffffff;
-    --text-secondary: #d1d1d1;
-    --text-muted: #9e9e9e;
-    --text-inverse: #ffffff;
+  --text-primary: #ffffff;
+  --text-secondary: #d1d1d1;
+  --text-muted: #9e9e9e;
+  --text-inverse: #ffffff;
 
-    --border-subtle: #3a3a3a;
-    --border-input: #4d4d4d;
-    --border-focus: #60cdff;
-    --focus-ring: none;
+  --border-subtle: #3a3a3a;
+  --border-input: #4d4d4d;
+  --border-focus: #60cdff;
+  --focus-ring: none;
 
-    --accent-color: #60cdff;
-    --accent-hover: #75d4ff;
-    --accent-active: #4cbfe6;
+  --accent-color: #60cdff;
+  --accent-hover: #75d4ff;
+  --accent-active: #4cbfe6;
 
-    --btn-primary-bg: #60cdff;
-    --btn-primary-hover: #75d4ff;
-    --btn-primary-active: #4cbfe6;
-    --btn-primary-text: #000000;
-    --btn-primary-shadow: 0 1px 2px rgba(0, 0, 0, 0.3), inset 0 -1px 0 rgba(0, 0, 0, 0.4);
+  --btn-primary-bg: #60cdff;
+  --btn-primary-hover: #75d4ff;
+  --btn-primary-active: #4cbfe6;
+  --btn-primary-text: #000000;
+  --btn-primary-shadow: 0 1px 2px rgba(0, 0, 0, 0.3), inset 0 -1px 0 rgba(0, 0, 0, 0.4);
 
-    --btn-secondary-bg: #323232;
-    --btn-secondary-hover: #3b3b3b;
-    --btn-secondary-active: #292929;
-    --btn-secondary-border: #4d4d4d;
-    --btn-secondary-text: #ffffff;
-    --btn-secondary-shadow: 0 1px 2px rgba(0, 0, 0, 0.3), inset 0 -1px 0 rgba(255, 255, 255, 0.1);
+  --btn-secondary-bg: #323232;
+  --btn-secondary-hover: #3b3b3b;
+  --btn-secondary-active: #292929;
+  --btn-secondary-border: #4d4d4d;
+  --btn-secondary-text: #ffffff;
+  --btn-secondary-shadow: 0 1px 2px rgba(0, 0, 0, 0.3), inset 0 -1px 0 rgba(255, 255, 255, 0.1);
 
-    --shadow-sm: 0 1px 4px rgba(0, 0, 0, 0.4);
-    --shadow-md: 0 6px 18px rgba(0, 0, 0, 0.5);
-    --shadow-lg: 0 16px 36px rgba(0, 0, 0, 0.65);
-  }
+  --shadow-sm: 0 1px 4px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 6px 18px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 16px 36px rgba(0, 0, 0, 0.65);
 }
+
 
 /* --- Windows Specific Component Styles --- */
 
@@ -236,27 +234,54 @@
   color: var(--text-primary);
   font-size: 12px;
   padding: 6px 10px;
-  transition: border-bottom-color 0.15s ease, background 0.15s ease;
+  transition: border-bottom-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
 }
 
 [data-platform="windows"][data-theme="dark"] .form-input,
 [data-platform="windows"][data-theme="dark"] .form-textarea,
-[data-platform="windows"][data-theme="dark"] .form-select,
-@media (prefers-color-scheme: dark) {
-  [data-platform="windows"]:not([data-theme="light"]) .form-input,
-  [data-platform="windows"]:not([data-theme="light"]) .form-textarea,
-  [data-platform="windows"]:not([data-theme="light"]) .form-select {
-    border-bottom-color: rgba(255, 255, 255, 0.4);
-  }
+[data-platform="windows"][data-theme="dark"] .form-select {
+  border-bottom-color: rgba(255, 255, 255, 0.4);
 }
 
 [data-platform="windows"] .form-input:focus,
 [data-platform="windows"] .form-textarea:focus,
 [data-platform="windows"] .form-select:focus {
   border-color: var(--border-input);
-  border-bottom: 2px solid var(--border-focus);
+  border-bottom-color: var(--border-focus);
   outline: none;
-  box-shadow: none;
+  box-shadow: inset 0 -1px 0 0 var(--border-focus);
+}
+
+/* Windows Status Bar */
+.status-bar {
+  font-size: 11px;
+}
+
+/* Windows 11 Modern Scrollbars */
+[data-platform="windows"] ::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+[data-platform="windows"] ::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+[data-platform="windows"] ::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.25);
+  border-radius: 3px;
+}
+
+[data-platform="windows"] ::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.45);
+}
+
+[data-platform="windows"][data-theme="dark"] ::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+[data-platform="windows"][data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.5);
 }
 
 /* Windows Sidebar List Selection with Indicator Pill */
@@ -311,31 +336,3 @@
   padding: 16px 20px;
 }
 
-/* Windows 11 Slim Expandable Scrollbar */
-[data-platform="windows"] ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-
-[data-platform="windows"] ::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-[data-platform="windows"] ::-webkit-scrollbar-thumb {
-  background: rgba(0, 0, 0, 0.25);
-  border-radius: 3px;
-}
-
-[data-platform="windows"] ::-webkit-scrollbar-thumb:hover {
-  background: rgba(0, 0, 0, 0.45);
-}
-
-[data-platform="windows"][data-theme="dark"] ::-webkit-scrollbar-thumb,
-@media (prefers-color-scheme: dark) {
-  [data-platform="windows"]:not([data-theme="light"]) ::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.3);
-  }
-  [data-platform="windows"]:not([data-theme="light"]) ::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.5);
-  }
-}

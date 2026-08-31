@@ -55,51 +55,49 @@
   --shadow-lg: 0 12px 24px rgba(0, 0, 0, 0.15);
 }
 
-[data-platform="linux"][data-theme="dark"],
-@media (prefers-color-scheme: dark) {
-  [data-platform="linux"]:not([data-theme="light"]) {
-    --bg-window: #242424;
-    --bg-header: #303030;
-    --bg-panel: #2d2d2d;
-    --bg-sidebar: #282828;
-    --bg-subtle: #383838;
-    --bg-hover: #424242;
-    --bg-selected: #3584e4;
-    --bg-selected-text: #ffffff;
-    --bg-selected-subtle: rgba(53, 132, 228, 0.25);
+[data-platform="linux"][data-theme="dark"] {
+  --bg-window: #242424;
+  --bg-header: #303030;
+  --bg-panel: #2d2d2d;
+  --bg-sidebar: #282828;
+  --bg-subtle: #383838;
+  --bg-hover: #424242;
+  --bg-selected: #3584e4;
+  --bg-selected-text: #ffffff;
+  --bg-selected-subtle: rgba(53, 132, 228, 0.25);
 
-    --text-primary: #eeeeec;
-    --text-secondary: #c0bfbc;
-    --text-muted: #888a85;
-    --text-inverse: #ffffff;
+  --text-primary: #eeeeec;
+  --text-secondary: #c0bfbc;
+  --text-muted: #888a85;
+  --text-inverse: #ffffff;
 
-    --border-subtle: #3a3a3a;
-    --border-input: #4f4f4f;
-    --border-focus: #3584e4;
-    --focus-ring: 0 0 0 2px rgba(53, 132, 228, 0.5);
+  --border-subtle: #3a3a3a;
+  --border-input: #4f4f4f;
+  --border-focus: #3584e4;
+  --focus-ring: 0 0 0 2px rgba(53, 132, 228, 0.5);
 
-    --accent-color: #3584e4;
-    --accent-hover: #1c71d8;
-    --accent-active: #1a5fb4;
+  --accent-color: #3584e4;
+  --accent-hover: #1c71d8;
+  --accent-active: #1a5fb4;
 
-    --btn-primary-bg: #3584e4;
-    --btn-primary-hover: #1c71d8;
-    --btn-primary-active: #1a5fb4;
-    --btn-primary-text: #ffffff;
-    --btn-primary-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --btn-primary-bg: #3584e4;
+  --btn-primary-hover: #1c71d8;
+  --btn-primary-active: #1a5fb4;
+  --btn-primary-text: #ffffff;
+  --btn-primary-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 
-    --btn-secondary-bg: #3a3a3a;
-    --btn-secondary-hover: #454545;
-    --btn-secondary-active: #303030;
-    --btn-secondary-border: #4f4f4f;
-    --btn-secondary-text: #eeeeec;
-    --btn-secondary-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  --btn-secondary-bg: #3a3a3a;
+  --btn-secondary-hover: #454545;
+  --btn-secondary-active: #303030;
+  --btn-secondary-border: #4f4f4f;
+  --btn-secondary-text: #eeeeec;
+  --btn-secondary-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 
-    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
-    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
-    --shadow-lg: 0 14px 28px rgba(0, 0, 0, 0.5);
-  }
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 14px 28px rgba(0, 0, 0, 0.5);
 }
+
 
 /* --- Linux Specific Component Styles --- */
 

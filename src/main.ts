@@ -62,8 +62,6 @@ ApplicationMenu.setApplicationMenu([
     submenu: [
       { role: "about" },
       { type: "divider" as const},
-      { label: "Preferences...", accelerator: "CmdOrCtrl+,", action: "project-settings" },
-      { type: "divider" as const},
       { role: "hide" },
       { role: "hideOthers" },
       { role: "showAll" },
@@ -77,7 +75,6 @@ ApplicationMenu.setApplicationMenu([
       { label: "New Project", accelerator: "CmdOrCtrl+N", action: "new-project" },
       { label: "Open Project...", accelerator: "CmdOrCtrl+O", action: "open-project" },
       { label: "Save Project", accelerator: "CmdOrCtrl+S", action: "save-project" },
-      { label: "Project Settings...", action: "project-settings" },
       { type: "divider" },
       { label: "Import BibTeX (.bib)...", action: "import-bibtex" },
       { label: "Export Markdown (.md)", action: "export-markdown" },
@@ -126,9 +123,11 @@ ApplicationMenu.setApplicationMenu([
   },
 ]);
 
+const hostPlatform = platform.platform() === "darwin" ? "mac" : platform.platform() === "win32" ? "windows" : "linux";
+
 const mainWindow = new BrowserWindow({
   title: "Citarium",
-  url: "views://mainview/index.html",
+  url: `views://mainview/index.html?platform=${hostPlatform}`,
   rpc: citariumRPC,
   frame: {
     width: 1260,
@@ -152,7 +151,6 @@ ApplicationMenu.on("application-menu-clicked", (event: any) => {
     "new-project": "window.app?.newProject()",
     "open-project": "window.app?.openProjectFileDialog()",
     "save-project": "window.app?.saveProjectToFile()",
-    "project-settings": "window.app?.openProjectSettings()",
     "load-example": "window.app?.loadExampleProject()",
     "import-bibtex": "window.app?.openImportDialog()",
     "export-markdown": "window.app?.exportMarkdown()",

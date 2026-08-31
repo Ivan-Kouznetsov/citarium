@@ -1,6 +1,7 @@
-.cottontail-tmp/
+.cottontail*
 .hutch/
 build/
 node_modules/
 hutch.lock
 bun.lock
+artifacts/

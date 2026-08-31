@@ -1,11 +1,6 @@
 /* ==========================================================================
    Citarium Desktop Theme System & Multi-Platform Widget Styles
    ========================================================================== */
-
-@import url("./platforms/mac.css");
-@import url("./platforms/windows.css");
-@import url("./platforms/linux.css");
-
 /* --- Base Custom Properties (Fallback / System Default) --- */
 :root {
   --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;

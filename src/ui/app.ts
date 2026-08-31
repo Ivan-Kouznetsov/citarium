@@ -60,21 +60,13 @@ export class CitariumApp {
     const savedTheme = (localStorage.getItem("citarium_theme") as any) || "system";
     this.applyTheme(savedTheme);
 
-    // Check if we can load example or default
+    // Initial render
     this.refreshAll();
-    this.loadExampleProject();
   }
 
   detectPlatform(): "mac" | "windows" | "linux" {
-    const userAgent = (typeof navigator !== "undefined" ? navigator.userAgent || "" : "").toLowerCase();
-    const platform = (typeof navigator !== "undefined" ? navigator.platform || "" : "").toLowerCase();
-    if (platform.includes("mac") || userAgent.includes("macintosh") || userAgent.includes("mac os")) {
-      return "mac";
-    }
-    if (platform.includes("win") || userAgent.includes("windows")) {
-      return "windows";
-    }
-    return "linux";
+    const platform = new URLSearchParams(window.location.search).get("platform");
+    return (platform as "mac" | "windows" | "linux") || "windows";
   }
 
   applyTheme(theme: "system" | "light" | "dark"): void {
@@ -85,16 +77,9 @@ export class CitariumApp {
       document.documentElement.setAttribute("data-theme", theme);
     }
 
-    const themeSelectEl = document.getElementById("settings-theme-select") as HTMLSelectElement;
-    if (themeSelectEl) themeSelectEl.value = theme;
-
     try {
       localStorage.setItem("citarium_theme", theme);
     } catch {}
-  }
-
-  onThemeSelectChange(value: string): void {
-    this.applyTheme(value as "system" | "light" | "dark");
   }
 
   // Native Desktop Dropdown Menus
@@ -842,32 +827,6 @@ export class CitariumApp {
     this.updateProjectBadge();
   }
 
-  // --- Project Settings Modal ---
-  openProjectSettings(): void {
-    const settingsTheme = document.getElementById("settings-theme-select") as HTMLSelectElement;
-    if (settingsTheme) settingsTheme.value = this.currentTheme;
-
-    (document.getElementById("project-modal-title") as HTMLInputElement).value = this.project.title;
-    (document.getElementById("project-modal-author") as HTMLInputElement).value = this.project.author;
-    (document.getElementById("project-modal-desc") as HTMLTextAreaElement).value = this.project.description;
-    (document.getElementById("project-modal-tags") as HTMLInputElement).value = this.project.tags.join(", ");
-    (document.getElementById("project-modal-words") as HTMLInputElement).value = String(this.project.targetWordCount || "");
-    this.openModal("modal-project");
-  }
-
-  saveProjectSettings(): void {
-    this.project.title = (document.getElementById("project-modal-title") as HTMLInputElement).value.trim() || "Untitled Project";
-    this.project.author = (document.getElementById("project-modal-author") as HTMLInputElement).value.trim();
-    this.project.description = (document.getElementById("project-modal-desc") as HTMLTextAreaElement).value.trim();
-    const tagsRaw = (document.getElementById("project-modal-tags") as HTMLInputElement).value.trim();
-    this.project.tags = tagsRaw.split(",").map((t) => t.trim()).filter(Boolean);
-    this.project.targetWordCount = parseInt((document.getElementById("project-modal-words") as HTMLInputElement).value) || 0;
-
-    this.isDirty = true;
-    this.closeModal("modal-project");
-    this.refreshAll();
-  }
-
   // --- Import BibTeX Modal ---
   openImportDialog(): void {
     (document.getElementById("import-bibtex-text") as HTMLTextAreaElement).value = "";
@@ -1073,28 +1032,72 @@ export class CitariumApp {
     }
   }
 
-  exportMarkdown(): void {
+  async exportMarkdown(): Promise<void> {
     const content = exportToMarkdown(this.project);
-    this.downloadTextFile(content, `${this.project.title.toLowerCase().replace(/\s+/g, "_")}_annotated_bibliography.md`);
+    const filename = `${this.project.title.toLowerCase().replace(/\s+/g, "_")}_annotated_bibliography.md`;
+    await this.saveTextFileWithDialog(content, filename, [
+      {
+        description: "Markdown Document (*.md)",
+        accept: { "text/markdown": [".md"], "text/plain": [".md"] },
+      },
+    ]);
   }
 
-  exportPlainText(): void {
+  async exportPlainText(): Promise<void> {
     const content = exportToPlainText(this.project);
-    this.downloadTextFile(content, `${this.project.title.toLowerCase().replace(/\s+/g, "_")}_references.txt`);
+    const filename = `${this.project.title.toLowerCase().replace(/\s+/g, "_")}_references.txt`;
+    await this.saveTextFileWithDialog(content, filename, [
+      {
+        description: "Plain Text Document (*.txt)",
+        accept: { "text/plain": [".txt"] },
+      },
+    ]);
   }
 
-  exportBibtex(): void {
+  async exportBibtex(): Promise<void> {
     const content = exportToBibtex(this.project);
-    this.downloadTextFile(content, `${this.project.title.toLowerCase().replace(/\s+/g, "_")}.bib`);
+    const filename = `${this.project.title.toLowerCase().replace(/\s+/g, "_")}.bib`;
+    await this.saveTextFileWithDialog(content, filename, [
+      {
+        description: "BibTeX File (*.bib)",
+        accept: { "application/x-bibtex": [".bib"], "text/plain": [".bib"] },
+      },
+    ]);
   }
 
-  downloadTextFile(content: string, filename: string): void {
+  async saveTextFileWithDialog(
+    content: string,
+    suggestedName: string,
+    types: Array<{ description: string; accept: Record<string, string[]> }>
+  ): Promise<void> {
+    if (typeof (window as any).showSaveFilePicker === "function") {
+      try {
+        const handle = await (window as any).showSaveFilePicker({
+          suggestedName,
+          types,
+        });
+        const writable = await handle.createWritable();
+        await writable.write(content);
+        await writable.close();
+        return;
+      } catch (err: any) {
+        if (err?.name === "AbortError") {
+          // User cancelled the save dialog
+          return;
+        }
+        console.warn("showSaveFilePicker failed, falling back to download:", err);
+      }
+    }
+
+    // Fallback for environments without File System Access API
     const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = filename;
+    a.download = suggestedName;
+    document.body.appendChild(a);
     a.click();
+    document.body.removeChild(a);
     URL.revokeObjectURL(url);
   }
 

@@ -16,3 +16,14 @@ export {
 } from "./exporters";
 
 export { BibTeXParser } from "./bibtex-parser";
+
+export {
+  loadSettings,
+  saveSettings,
+  updateSettings,
+  getSettingsPath,
+  DEFAULT_SETTINGS,
+  type CitariumSettings,
+} from "./settings";
+
+

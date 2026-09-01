@@ -1,34 +1,15 @@
 import { BrowserWindow, BrowserView, ApplicationMenu, Utils } from "electrobun/main";
 import { join } from "path";
 import { existsSync, readFileSync } from "fs";
-import { loadProject, saveProject } from "./io";
-import { Project, type ProjectDict } from "./models";
+import { loadProject, saveProject, loadSettings, saveSettings } from "./io";
+import { Project } from "./models";
+import type { CitariumRPC } from "./rpc-types";
 import platform from "os";
 
 const ROOT_DIR = process.cwd();
 
-type CitariumRPC = {
-  bun: {
-    requests: {
-      loadProject: {
-        params: { filepath: string };
-        response: { success: boolean; project?: ProjectDict; error?: string };
-      };
-      saveProject: {
-        params: { filepath: string; project: ProjectDict };
-        response: { success: boolean; filepath?: string; error?: string };
-      };     
-    };
-    messages: {};
-  };
-  webview: {
-    requests: {};
-    messages: {};
-  };
-};
-
 const citariumRPC = BrowserView.defineRPC<CitariumRPC>({
-  maxRequestTime: 5000,
+  maxRequestTime: 300000,
   handlers: {
     requests: {
       loadProject: async ({ filepath }) => {
@@ -46,31 +27,106 @@ const citariumRPC = BrowserView.defineRPC<CitariumRPC>({
           }
           const p = Project.fromDict(project);
           await saveProject(p, filepath);
+          await saveSettings({ lastOpenedFile: filepath });
           return { success: true, filepath };
         } catch (err: any) {
           return { success: false, error: err.message };
         }
-      }
+      },
+      showMessageBox: async ({ type, title, message, detail, buttons }) => {
+        try {
+          const res = await Utils.showMessageBox({
+            type: type || "warning",
+            title: title || "Citarium",
+            message: message || "",
+            detail: detail || "",
+            buttons: buttons || ["OK"],
+          });
+          return { success: true, response: res.response };
+        } catch (err: any) {
+          return { success: false, error: err.message, response: 0 };
+        }
+      },
+      getSettings: async () => {
+        try {
+          const settings = await loadSettings();
+          return { success: true, settings };
+        } catch (err: any) {
+          return {
+            success: false,
+            settings: { lastOpenedFile: null, theme: "light", recentFiles: [] },
+            error: err.message,
+          };
+        }
+      },
+      saveSettings: async ({ settings }) => {
+        try {
+          const updated = await saveSettings(settings);
+          return { success: true, settings: updated };
+        } catch (err: any) {
+          return { success: false, error: err.message };
+        }
+      },
+      openFileDialog: async ({ startingFolder, allowedFileTypes }) => {
+        try {
+          const paths = await Utils.openFileDialog({
+            startingFolder: startingFolder || process.cwd(),
+            allowedFileTypes: allowedFileTypes || "json",
+            canChooseFiles: true,
+            canChooseDirectory: false,
+            allowsMultipleSelection: false,
+          });
+          if (paths && paths.length > 0) {
+            return { success: true, filepath: paths[0] };
+          }
+          return { success: true, filepath: null };
+        } catch (err: any) {
+          return { success: false, error: err.message, filepath: null };
+        }
+      },
     },
     messages: {},
   },
 });
 
+
+const hostPlatform = platform.platform() === "darwin" ? "mac" : platform.platform() === "win32" ? "windows" : "linux";
+
+const mainWindow = new BrowserWindow({
+  title: "Citarium",
+  url: `views://mainview/index.html?platform=${hostPlatform}`,
+  rpc: citariumRPC,
+  frame: {
+    width: 1260,
+    height: 820,
+    x: 100,
+    y: 80,
+  },
+});
+
+// Quit application when main window is closed
+mainWindow.on("close", () => {
+  Utils.quit();
+});
+
 // Configure Full Native Application Menus for macOS & Windows
 ApplicationMenu.setApplicationMenu([
-  ...(platform.platform()==="darwin" ? [
-  {
-    label: "Citarium",
-    submenu: [
-      { role: "about" },
-      { type: "divider" as const},
-      { role: "hide" },
-      { role: "hideOthers" },
-      { role: "showAll" },
-      { type: "divider" as const},
-      { role: "quit" },
-    ],
-  }]:[]),
+  ...(platform.platform() === "darwin"
+    ? [
+        {
+          label: "Citarium",
+          submenu: [
+            { role: "about" },
+            { type: "divider" as const },
+            { role: "hide" },
+            { role: "hideOthers" },
+            { role: "showAll" },
+            { type: "divider" as const },
+            { role: "quit" },
+          ],
+        },
+      ]
+    : []),
   {
     label: "File",
     submenu: [
@@ -127,25 +183,6 @@ ApplicationMenu.setApplicationMenu([
   },
 ]);
 
-const hostPlatform = platform.platform() === "darwin" ? "mac" : platform.platform() === "win32" ? "windows" : "linux";
-
-const mainWindow = new BrowserWindow({
-  title: "Citarium",
-  url: `views://mainview/index.html?platform=${hostPlatform}`,
-  rpc: citariumRPC,
-  frame: {
-    width: 1260,
-    height: 820,
-    x: 100,
-    y: 80,
-  },
-});
-
-// Quit application when main window is closed
-mainWindow.on("close", () => {
-  Utils.quit();
-});
-
 // Handle Native Menu Item Clicks
 ApplicationMenu.on("application-menu-clicked", (event: any) => {
   const action = event?.data?.action || event?.action;
@@ -172,5 +209,6 @@ ApplicationMenu.on("application-menu-clicked", (event: any) => {
     mainWindow.webview.executeJavascript(js);
   }
 });
+
 
 console.log("🚀 Citarium Electrobun Desktop App started with native application menus!");

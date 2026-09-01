@@ -11,11 +11,12 @@ import Electrobun, { Electroview } from "electrobun/view";
 import type { CitariumRPC } from "../rpc-types";
 
 const rpc = Electroview.defineRPC<CitariumRPC>({
-  maxRequestTime: 5000,
+  maxRequestTime: 300000,
   handlers: { requests: {}, messages: {} },
 });
 
 const electrobun = new Electrobun.Electroview({ rpc });
+window.electrobun = electrobun;
 
 export class CitariumApp {
   project: Project;
@@ -24,7 +25,11 @@ export class CitariumApp {
   currentSubTab: "reference" | "annotation" = "reference";
   isDirty: boolean = false;
   currentFilepath: string | null = null;
-  currentFileHandle: any = null;
+  currentFileHandle: FileSystemFileHandle | null = null;
+
+  get isDesktop(): boolean {
+    return typeof window.__electrobunWebviewId !== "undefined";
+  }
 
   currentPlatform: "mac" | "windows" | "linux" = "mac";
   currentTheme: "system" | "light" | "dark" = "light";
@@ -58,10 +63,74 @@ export class CitariumApp {
     this.currentPlatform = this.detectPlatform();
     document.documentElement.setAttribute("data-platform", this.currentPlatform);
 
-    this.applyTheme("light");
+    // Initial theme fallback
+    let initialTheme: "light" | "dark" = "light";
+    try {
+      const stored = localStorage.getItem("citarium_theme");
+      if (stored === "dark") initialTheme = "dark";
+    } catch {}
+    this.applyTheme(initialTheme, false);
 
     // Initial render
     this.refreshAll();
+
+    // Asynchronously load persistent settings from local JSON (theme & last opened file)
+    this.loadInitialSettings();
+  }
+
+  async loadInitialSettings(): Promise<void> {
+    if (!this.isDesktop) {
+      return;
+    }
+    try {
+      const res = await electrobun.rpc?.request?.getSettings?.({});
+      if (res?.success && res.settings) {
+        const { theme, lastOpenedFile } = res.settings;
+        if (theme) {
+          this.applyTheme(theme, false);
+        }
+        if (lastOpenedFile) {
+          const loadRes = await electrobun.rpc?.request?.loadProject?.({ filepath: lastOpenedFile });
+          if (loadRes?.success && loadRes.project) {
+            this.project = Project.fromDict(loadRes.project);
+            this.currentFilepath = lastOpenedFile;
+            this.currentFileHandle = null;
+            this.isDirty = false;
+            this.selectedCitationId = this.project.citations.length > 0 ? this.project.citations[0].id : null;
+            this.refreshAll();
+          } else {
+            // Last opened file does not exist or failed to load -> warn user with OS alertbox / message box
+            await electrobun.rpc?.request?.saveSettings?.({ settings: { lastOpenedFile: null } });
+            await this.showWarningDialog(`Could not find last opened project: "${lastOpenedFile}". A new project has been opened.`);
+          }
+        }
+      }
+    } catch (err) {
+      console.warn("[Citarium] Initial settings load skipped/failed:", err);
+    }
+  }
+
+  async showWarningDialog(message: string): Promise<void> {
+    if (this.isDesktop && electrobun.rpc?.request?.showMessageBox) {
+      try {
+        const res = await electrobun.rpc.request.showMessageBox({
+          type: "warning",
+          title: "Citarium",
+          message,
+          buttons: ["OK"],
+        });
+        if (res?.success) return;
+      } catch {}
+    }
+    window.alert(message);
+  }
+
+  showWarningBanner(message: string): void {
+    this.showWarningDialog(message);
+  }
+
+  dismissWarningBanner(): void {
+    // No-op for OS dialogs
   }
 
   detectPlatform(): "mac" | "windows" | "linux" {
@@ -69,19 +138,24 @@ export class CitariumApp {
     return (platform as "mac" | "windows" | "linux") || "windows";
   }
 
-  applyTheme(theme: "system" | "light" | "dark"): void {
+  applyTheme(theme: "system" | "light" | "dark", persist: boolean = true): void {
     this.currentTheme = theme === "dark" ? "dark" : "light";
     document.documentElement.setAttribute("data-theme", this.currentTheme);
 
     try {
       localStorage.setItem("citarium_theme", this.currentTheme);
     } catch {}
+
+    if (persist && this.isDesktop) {
+      electrobun.rpc?.request?.saveSettings?.({ settings: { theme: this.currentTheme } }).catch(() => {});
+    }
   }
 
   toggleTheme(): void {
     const nextTheme = this.currentTheme === "dark" ? "light" : "dark";
-    this.applyTheme(nextTheme);
+    this.applyTheme(nextTheme, true);
   }
+
 
   // Native Desktop Dropdown Menus
   toggleDropdownMenu(menuId: string, e: Event): void {
@@ -969,6 +1043,7 @@ export class CitariumApp {
     if (this.isDirty && !confirm("You have unsaved changes. Create new project anyway?")) {
       return;
     }
+    this.dismissWarningBanner();
     this.project = new Project({
       title: "New Writing Project",
       description: "Annotated bibliography and research reference repository.",
@@ -978,12 +1053,44 @@ export class CitariumApp {
     this.isDirty = false;
     this.selectedCitationId = null;
     this.refreshAll();
+    electrobun.rpc?.request?.saveSettings?.({ settings: { lastOpenedFile: null } }).catch(() => {});
   }
 
   async openProjectFileDialog(): Promise<void> {
-    if (typeof (window as any).showOpenFilePicker === "function") {
+    // 1. Native desktop open file dialog via Electrobun RPC
+    if (this.isDesktop && electrobun.rpc?.request?.openFileDialog) {
       try {
-        const [handle] = await (window as any).showOpenFilePicker({
+        const res = await electrobun.rpc.request.openFileDialog({
+          allowedFileTypes: "json",
+        });
+        if (res?.success && res.filepath) {
+          const loadRes = await electrobun.rpc.request.loadProject({ filepath: res.filepath });
+          if (loadRes?.success && loadRes.project) {
+            this.project = Project.fromDict(loadRes.project);
+            this.currentFilepath = res.filepath;
+            this.currentFileHandle = null;
+            this.isDirty = false;
+            this.selectedCitationId = this.project.citations.length > 0 ? this.project.citations[0].id : null;
+            this.refreshAll();
+            await electrobun.rpc.request.saveSettings({ settings: { lastOpenedFile: this.currentFilepath } });
+            return;
+          } else {
+            await this.showWarningDialog(`Failed to open project: ${loadRes?.error || "Unknown error"}`);
+            return;
+          }
+        } else if (res?.success && !res.filepath) {
+          // User cancelled dialog
+          return;
+        }
+      } catch (err: any) {
+        console.warn("Native openFileDialog failed, falling back to web file picker:", err);
+      }
+    }
+
+    // 2. Web File System Access API (showOpenFilePicker)
+    if (typeof window.showOpenFilePicker === "function") {
+      try {
+        const [handle] = await window.showOpenFilePicker({
           types: [
             {
               description: "Citarium Project (*.json)",
@@ -997,11 +1104,17 @@ export class CitariumApp {
           const text = await file.text();
           const data = JSON.parse(text);
           this.project = Project.fromDict(data);
-          this.currentFilepath = file.name;
+          const fullPath = file.path || file.name;
+          this.currentFilepath = fullPath;
           this.currentFileHandle = handle;
           this.isDirty = false;
           this.selectedCitationId = this.project.citations.length > 0 ? this.project.citations[0].id : null;
           this.refreshAll();
+          if (this.currentFilepath && (this.currentFilepath.includes("/") || this.currentFilepath.includes("\\"))) {
+            if (this.isDesktop) {
+              electrobun.rpc?.request?.saveSettings?.({ settings: { lastOpenedFile: this.currentFilepath } }).catch(() => {});
+            }
+          }
           return;
         }
       } catch (err: any) {
@@ -1012,6 +1125,7 @@ export class CitariumApp {
       }
     }
 
+    // 3. Fallback HTML file input
     const input = document.getElementById("hidden-file-input") as HTMLInputElement;
     if (input) {
       input.value = "";
@@ -1023,7 +1137,7 @@ export class CitariumApp {
     const input = e.target as HTMLInputElement;
     if (!input.files || input.files.length === 0) return;
     const file = input.files[0];
-    const filepath = file.name;
+    const filepath = file.path || file.name;
     const reader = new FileReader();
     reader.onload = (ev) => {
       try {
@@ -1035,6 +1149,11 @@ export class CitariumApp {
         this.isDirty = false;
         this.selectedCitationId = this.project.citations.length > 0 ? this.project.citations[0].id : null;
         this.refreshAll();
+        if (this.currentFilepath && (this.currentFilepath.includes("/") || this.currentFilepath.includes("\\"))) {
+          if (this.isDesktop) {
+            electrobun.rpc?.request?.saveSettings?.({ settings: { lastOpenedFile: this.currentFilepath } }).catch(() => {});
+          }
+        }
       } catch (err: any) {
         console.error("Failed to load project:", err);
       }
@@ -1046,12 +1165,13 @@ export class CitariumApp {
   }
 
   async loadExampleProject(): Promise<void> {
+    this.dismissWarningBanner();
     try {
       const resp = await fetch("/examples/feline_behavior_annotated_bibliography.json");
       if (resp.ok) {
         const data = await resp.json();
         this.project = Project.fromDict(data);
-        this.currentFilepath = "feline_behavior_annotated_bibliography.json";
+        this.currentFilepath = null;
         this.currentFileHandle = null;
         this.isDirty = false;
         this.selectedCitationId = this.project.citations.length > 0 ? this.project.citations[0].id : null;
@@ -1073,6 +1193,9 @@ export class CitariumApp {
         await writable.close();
         this.isDirty = false;
         this.updateProjectBadge();
+        if (this.currentFilepath) {
+          electrobun.rpc?.request?.saveSettings?.({ settings: { lastOpenedFile: this.currentFilepath } }).catch(() => {});
+        }
         return;
       } catch (err: any) {
         console.warn("Writing to currentFileHandle failed, falling back to save dialog:", err);
@@ -1081,7 +1204,7 @@ export class CitariumApp {
     }
 
     // 2. If backend RPC save is available with an absolute path
-    if (this.currentFilepath && (this.currentFilepath.includes("/") || this.currentFilepath.includes("\\"))) {
+    if (this.isDesktop && this.currentFilepath && (this.currentFilepath.includes("/") || this.currentFilepath.includes("\\"))) {
       try {
         const res = await electrobun.rpc?.request?.saveProject?.({
           filepath: this.currentFilepath,
@@ -1091,6 +1214,7 @@ export class CitariumApp {
           this.isDirty = false;
           this.currentFilepath = res.filepath || this.currentFilepath;
           this.updateProjectBadge();
+          electrobun.rpc?.request?.saveSettings?.({ settings: { lastOpenedFile: this.currentFilepath } }).catch(() => {});
           return;
         }
       } catch (err: any) {
@@ -1109,13 +1233,20 @@ export class CitariumApp {
       ]);
       if (handle) {
         this.currentFileHandle = handle;
+        if (handle.name) {
+          this.currentFilepath = handle.name;
+        }
       }
       this.isDirty = false;
       this.updateProjectBadge();
+      if (this.currentFilepath && this.isDesktop) {
+        electrobun.rpc?.request?.saveSettings?.({ settings: { lastOpenedFile: this.currentFilepath } }).catch(() => {});
+      }
     } catch (err: any) {
       console.error("Failed to save project:", err);
     }
   }
+
 
   async exportMarkdown(): Promise<void> {
     const content = exportToMarkdown(this.project);
@@ -1154,10 +1285,10 @@ export class CitariumApp {
     content: string,
     suggestedName: string,
     types: Array<{ description: string; accept: Record<string, string[]> }>
-  ): Promise<any> {
-    if (typeof (window as any).showSaveFilePicker === "function") {
+  ): Promise<FileSystemFileHandle | null> {
+    if (typeof window.showSaveFilePicker === "function") {
       try {
-        const handle = await (window as any).showSaveFilePicker({
+        const handle = await window.showSaveFilePicker({
           suggestedName,
           types,
         });
@@ -1214,7 +1345,7 @@ export class CitariumApp {
 
 // Global App Singleton on window
 const app = new CitariumApp();
-(window as any).app = app;
+window.app = app;
 
 window.addEventListener("DOMContentLoaded", () => {
   app.init();

@@ -10,12 +10,23 @@ export function isHostPlatform(target: SupportedPlatform): boolean {
 }
 
 /**
+ * Current host platform mapped to app platform identifier
+ */
+export const CURRENT_PLATFORM: "windows" | "mac" | "linux" =
+  process.platform === "darwin" ? "mac" : process.platform === "win32" ? "windows" : "linux";
+
+export function getCurrentPlatform(): "windows" | "mac" | "linux" {
+  return CURRENT_PLATFORM;
+}
+
+/**
  * Returns appropriate modifier key depending on OS:
  * 'Meta' (Cmd) on macOS, 'Control' (Ctrl) on Windows/Linux
  */
 export function getOsModifierKey(): "Meta" | "Control" {
   return process.platform === "darwin" ? "Meta" : "Control";
 }
+
 
 /**
  * Skips test if not running on the specified host OS

@@ -6,6 +6,8 @@
   "scripts": {
     "start": "hutch run dev",
     "desktop": "hutch run dev",
+    "desktop:stable": "bun run build && bun scripts/launch-stable.ts",
+    "start:stable": "bun run desktop:stable",
     "dev": "hutch run dev",
     "test": "bun test tests/*.test.ts",
     "test:e2e": "playwright test",

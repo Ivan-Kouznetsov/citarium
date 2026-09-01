@@ -215,6 +215,7 @@ if (platform.platform() !== "linux") {
       label: "Help",
       submenu: [
         { label: "APA 7th Edition Guide", action: "open-guide" },
+        { label: "About Citarium", action: "open-about" },
       ],
     },
   ]);
@@ -245,6 +246,7 @@ if (platform.platform() !== "linux") {
       "view-overview": "window.app.selectWorkspace('overview')",
       "toggle-theme": "window.app.toggleTheme()",
       "open-guide": "window.app.openGuideDialog()",
+      "open-about": "window.app.openAboutDialog()",
     };
 
     const js = actionToJsMap[action];

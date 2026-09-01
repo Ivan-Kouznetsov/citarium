@@ -1913,6 +1913,10 @@ export class CitariumApp {
     this.openModal("modal-guide");
   }
 
+  openAboutDialog(): void {
+    this.openModal("modal-about");
+  }
+
   escapeHtml(str: string): string {
     return str
       .replace(/&/g, "&amp;")

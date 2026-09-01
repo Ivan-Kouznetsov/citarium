@@ -5,6 +5,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Citarium — Annotated Bibliography & Research Manager</title>
+  <link rel="icon" type="image/x-icon" href="./assets/favicon.ico">
+  <link rel="icon" type="image/png" sizes="32x32" href="./assets/icon-32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="./assets/icon-16.png">
+  <link rel="apple-touch-icon" href="./assets/icon-256.png">
   <link rel="stylesheet" href="./styles/theme.css">
   <script>
     (function () {
@@ -80,6 +84,7 @@
         <button class="menubar-btn" id="menubar-btn-help" aria-haspopup="true" aria-expanded="false" onclick="app.toggleMenu('help', event)">Help</button>
         <div class="menubar-dropdown" id="dropdown-help" role="menu">
           <button class="menu-row" onclick="app.openGuideDialog()"><span class="menu-label">APA 7th Edition Guide</span></button>
+          <button class="menu-row" onclick="app.openAboutDialog()"><span class="menu-label">About Citarium</span></button>
         </div>
       </div>
     </nav>
@@ -598,7 +603,10 @@
   <div id="modal-guide" class="modal-overlay">
     <div class="modal-dialog" style="width: 600px;">
       <div class="modal-header">
-        <div class="modal-title">APA 7th Edition Quick Reference Guide</div>
+        <div class="modal-title" style="display: flex; align-items: center; gap: 8px;">
+          <img src="./assets/icon-32.png" alt="Citarium" style="width: 20px; height: 20px; border-radius: 4px;" />
+          <span>APA 7th Edition Quick Reference Guide</span>
+        </div>
         <button class="btn btn-secondary btn-sm" onclick="app.closeModal('modal-guide')">✕</button>
       </div>
       <div class="modal-body" style="font-size: 12px; line-height: 1.6;">
@@ -624,6 +632,25 @@
       </div>
       <div class="modal-footer">
         <button class="btn btn-primary btn-sm" onclick="app.closeModal('modal-guide')">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 6: About Citarium -->
+  <div id="modal-about" class="modal-overlay">
+    <div class="modal-dialog" style="width: 440px; text-align: center; padding: 24px;">
+      <div style="display: flex; flex-direction: column; align-items: center; gap: 12px; margin-bottom: 14px;">
+        <img src="./assets/icon-128.png" alt="Citarium App Icon" style="width: 80px; height: 80px; border-radius: 18px; box-shadow: 0 4px 16px rgba(0,0,0,0.15);" />
+        <div>
+          <h2 style="font-size: 18px; font-weight: 700; margin: 0 0 2px 0;">Citarium</h2>
+          <div style="font-size: 12px; color: var(--text-muted);">Version 0.1.0</div>
+        </div>
+      </div>
+      <p style="font-size: 13px; color: var(--text-secondary); line-height: 1.5; margin-bottom: 18px;">
+        Annotated Bibliography and Writing Project Manager adhering to the APA 7th Edition style guide.
+      </p>
+      <div class="modal-footer" style="justify-content: center; border-top: none; padding-top: 0;">
+        <button class="btn btn-primary btn-sm" onclick="app.closeModal('modal-about')">Close</button>
       </div>
     </div>
   </div>

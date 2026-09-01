@@ -1,7 +1,6 @@
 import type { Electroview } from "electrobun/view";
 import type { CitariumRPC } from "../rpc-types";
 import type { CitariumApp } from "./app";
-import type { CitariumSettings } from "../io/settings";
 
 declare global {
   interface File {
@@ -43,13 +42,6 @@ declare global {
     app: CitariumApp;
     showOpenFilePicker?(options?: OpenFilePickerOptions): Promise<FileSystemFileHandle[]>;
     showSaveFilePicker?(options?: SaveFilePickerOptions): Promise<FileSystemFileHandle>;
-    _capturedSavedSettings?: Partial<CitariumSettings> | null;
-    __lastSavePickerCall?: SaveFilePickerOptions | null;
-    __lastSavedContent?: string | null;
-    __savedNewFileJson?: string | null;
-    __savedJsonData?: string | null;
-    __fileContentStore?: string | null;
-    __savedToOpenedFile?: boolean | null;
   }
 }
 

@@ -20,6 +20,8 @@ export type CitariumRPC = {
           message?: string;
           detail?: string;
           buttons?: string[];
+          defaultId?: number;
+          cancelId?: number;
         };
         response: { success: boolean; response: number; error?: string };
       };
@@ -34,6 +36,10 @@ export type CitariumRPC = {
       openFileDialog: {
         params: { startingFolder?: string; allowedFileTypes?: string };
         response: { success: boolean; filepath: string | null; error?: string };
+      };
+      closeWindow: {
+        params: {};
+        response: { success: boolean; error?: string };
       };
     };
     messages: {};

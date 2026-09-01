@@ -23,7 +23,16 @@ export class CitariumApp {
   selectedCitationId: string | null = null;
   currentWorkspace: "references" | "bibliography" | "overview" = "references";
   currentSubTab: "reference" | "annotation" = "reference";
-  isDirty: boolean = false;
+  isModified: boolean = false;
+
+  get isDirty(): boolean {
+    return this.isModified;
+  }
+
+  set isDirty(val: boolean) {
+    this.isModified = val;
+  }
+
   currentFilepath: string | null = null;
   currentFileHandle: FileSystemFileHandle | null = null;
 
@@ -33,6 +42,10 @@ export class CitariumApp {
 
   currentPlatform: "mac" | "windows" | "linux" = "mac";
   currentTheme: "system" | "light" | "dark" = "light";
+
+  get electrobun() {
+    return window.electrobun || electrobun;
+  }
 
   apa7 = new APA7Formatter();
   urlChecker = new AsyncURLChecker();
@@ -83,24 +96,24 @@ export class CitariumApp {
       return;
     }
     try {
-      const res = await electrobun.rpc?.request?.getSettings?.({});
+      const res = await this.electrobun?.rpc?.request?.getSettings?.({});
       if (res?.success && res.settings) {
         const { theme, lastOpenedFile } = res.settings;
         if (theme) {
           this.applyTheme(theme, false);
         }
         if (lastOpenedFile) {
-          const loadRes = await electrobun.rpc?.request?.loadProject?.({ filepath: lastOpenedFile });
+          const loadRes = await this.electrobun?.rpc?.request?.loadProject?.({ filepath: lastOpenedFile });
           if (loadRes?.success && loadRes.project) {
             this.project = Project.fromDict(loadRes.project);
             this.currentFilepath = lastOpenedFile;
             this.currentFileHandle = null;
-            this.isDirty = false;
+            this.isModified = false;
             this.selectedCitationId = this.project.citations.length > 0 ? this.project.citations[0].id : null;
             this.refreshAll();
           } else {
             // Last opened file does not exist or failed to load -> warn user with OS alertbox / message box
-            await electrobun.rpc?.request?.saveSettings?.({ settings: { lastOpenedFile: null } });
+            await this.electrobun?.rpc?.request?.saveSettings?.({ settings: { lastOpenedFile: null } });
             await this.showWarningDialog(`Could not find last opened project: "${lastOpenedFile}". A new project has been opened.`);
           }
         }
@@ -111,9 +124,9 @@ export class CitariumApp {
   }
 
   async showWarningDialog(message: string): Promise<void> {
-    if (this.isDesktop && electrobun.rpc?.request?.showMessageBox) {
+    if (this.isDesktop && this.electrobun?.rpc?.request?.showMessageBox) {
       try {
-        const res = await electrobun.rpc.request.showMessageBox({
+        const res = await this.electrobun.rpc.request.showMessageBox({
           type: "warning",
           title: "Citarium",
           message,
@@ -206,6 +219,14 @@ export class CitariumApp {
         this.selectWorkspace("overview");
       }
     });
+
+    window.addEventListener("beforeunload", (e) => {
+      if (this.isModified) {
+        e.preventDefault();
+        e.returnValue = "";
+        return "";
+      }
+    });
   }
 
   setupGlobalClick(): void {
@@ -256,8 +277,8 @@ export class CitariumApp {
   }
 
   updateProjectBadge(): void {
-    const dirty = this.isDirty ? " • (unsaved)" : "";
-    document.title = `${this.project.title}${dirty} — Citarium`;
+    const modified = this.isModified ? " • (unsaved)" : "";
+    document.title = `${this.project.title}${modified} — Citarium`;
   }
 
   updateTagOptions(): void {
@@ -371,7 +392,7 @@ export class CitariumApp {
       entryType: "journal_article",
     });
     this.project.addCitation(newCit);
-    this.isDirty = true;
+    this.isModified = true;
     this.selectedCitationId = newCit.id;
     this.refreshAll();
   }
@@ -384,7 +405,7 @@ export class CitariumApp {
     d.title = `${cur.title} (Copy)`;
     const dup = Citation.fromDict(d);
     this.project.addCitation(dup);
-    this.isDirty = true;
+    this.isModified = true;
     this.selectedCitationId = dup.id;
     this.refreshAll();
   }
@@ -394,7 +415,7 @@ export class CitariumApp {
     if (!cur) return;
     if (confirm(`Are you sure you want to permanently delete '${cur.title}'?`)) {
       this.project.removeCitation(cur.id);
-      this.isDirty = true;
+      this.isModified = true;
       this.selectedCitationId = null;
       this.refreshAll();
     }
@@ -573,7 +594,7 @@ export class CitariumApp {
     else if (field === "edition") cit.edition = getVal("form-edition");
     else if (field === "reportNumber") cit.reportNumber = getVal("form-report-number");
 
-    this.isDirty = true;
+    this.isModified = true;
     this.updateFieldLabels(cit.entryType);
     this.updatePreview();
     this.renderCitationList();
@@ -588,7 +609,7 @@ export class CitariumApp {
     if (!cit) return;
     const raw = (document.getElementById("form-authors") as HTMLInputElement).value;
     cit.authors = Author.parseMultiple(raw);
-    this.isDirty = true;
+    this.isModified = true;
     this.updatePreview();
     this.renderCitationList();
     this.updateProjectBadge();
@@ -599,7 +620,7 @@ export class CitariumApp {
     if (!cit) return;
     const raw = (document.getElementById("form-editors") as HTMLInputElement).value;
     cit.editors = Author.parseMultiple(raw);
-    this.isDirty = true;
+    this.isModified = true;
     this.updatePreview();
     this.renderCitationList();
     this.updateProjectBadge();
@@ -620,7 +641,7 @@ export class CitariumApp {
     else if (field === "relevance") cit.annotation.relevance = (document.getElementById("annot-relevance") as HTMLTextAreaElement).value;
     else if (field === "generalNotes") cit.annotation.generalNotes = (document.getElementById("annot-notes") as HTMLTextAreaElement).value;
 
-    this.isDirty = true;
+    this.isModified = true;
     this.renderCitationList();
     this.updateProjectBadge();
   }
@@ -725,7 +746,7 @@ export class CitariumApp {
       );
     }
 
-    this.isDirty = true;
+    this.isModified = true;
     this.renderIdeasTable(cit.annotation.quotes);
     this.closeModal("modal-quote");
     this.updateProjectBadge();
@@ -735,7 +756,7 @@ export class CitariumApp {
     const cit = this.getSelectedCitation();
     if (!cit) return;
     cit.annotation.quotes = cit.annotation.quotes.filter((q) => q.id !== quoteId);
-    this.isDirty = true;
+    this.isModified = true;
     this.renderIdeasTable(cit.annotation.quotes);
     this.updateProjectBadge();
   }
@@ -895,7 +916,7 @@ export class CitariumApp {
       cit.editors = this.modalAuthorsList;
       (document.getElementById("form-editors") as HTMLInputElement).value = Author.formatAuthorList(cit.editors);
     }
-    this.isDirty = true;
+    this.isModified = true;
     this.updatePreview();
     this.renderCitationList();
     this.closeModal("modal-authors");
@@ -912,7 +933,7 @@ export class CitariumApp {
 
   previewBibtexImport(): void {
     const raw = (document.getElementById("import-bibtex-text") as HTMLTextAreaElement).value.trim();
-    const summary = document.getElementById("import-summary-label");
+    const summary = document.getElementById("import-summary-label") as HTMLDivElement;
     if (!raw) {
       if (summary) summary.innerText = "Please enter some BibTeX text.";
       return;
@@ -940,7 +961,7 @@ export class CitariumApp {
     for (const c of this.parsedBibtexCitations) {
       this.project.addCitation(c);
     }
-    this.isDirty = true;
+    this.isModified = true;
     this.closeModal("modal-import");
     this.refreshAll();
   }
@@ -1041,7 +1062,7 @@ export class CitariumApp {
 
   // --- File & Project Operations ---
   newProject(): void {
-    if (this.isDirty && !confirm("You have unsaved changes. Create new project anyway?")) {
+    if (this.isModified && !confirm("You have unsaved changes. Create new project anyway?")) {
       return;
     }
     this.dismissWarningBanner();
@@ -1051,29 +1072,29 @@ export class CitariumApp {
     });
     this.currentFilepath = null;
     this.currentFileHandle = null;
-    this.isDirty = false;
+    this.isModified = false;
     this.selectedCitationId = null;
     this.refreshAll();
-    electrobun.rpc?.request?.saveSettings?.({ settings: { lastOpenedFile: null } }).catch(() => {});
+    this.electrobun?.rpc?.request?.saveSettings?.({ settings: { lastOpenedFile: null } }).catch(() => {});
   }
 
   async openProjectFileDialog(): Promise<void> {
     // 1. Native desktop open file dialog via Electrobun RPC
-    if (this.isDesktop && electrobun.rpc?.request?.openFileDialog) {
+    if (this.isDesktop && this.electrobun?.rpc?.request?.openFileDialog) {
       try {
-        const res = await electrobun.rpc.request.openFileDialog({
+        const res = await this.electrobun.rpc.request.openFileDialog({
           allowedFileTypes: "json",
         });
         if (res?.success && res.filepath) {
-          const loadRes = await electrobun.rpc.request.loadProject({ filepath: res.filepath });
+          const loadRes = await this.electrobun.rpc.request.loadProject({ filepath: res.filepath });
           if (loadRes?.success && loadRes.project) {
             this.project = Project.fromDict(loadRes.project);
             this.currentFilepath = res.filepath;
             this.currentFileHandle = null;
-            this.isDirty = false;
+            this.isModified = false;
             this.selectedCitationId = this.project.citations.length > 0 ? this.project.citations[0].id : null;
             this.refreshAll();
-            await electrobun.rpc.request.saveSettings({ settings: { lastOpenedFile: this.currentFilepath } });
+            await this.electrobun.rpc.request.saveSettings({ settings: { lastOpenedFile: this.currentFilepath } });
             return;
           } else {
             await this.showWarningDialog(`Failed to open project: ${loadRes?.error || "Unknown error"}`);
@@ -1108,12 +1129,12 @@ export class CitariumApp {
           const fullPath = file.path || file.name;
           this.currentFilepath = fullPath;
           this.currentFileHandle = handle;
-          this.isDirty = false;
+          this.isModified = false;
           this.selectedCitationId = this.project.citations.length > 0 ? this.project.citations[0].id : null;
           this.refreshAll();
           if (this.currentFilepath && (this.currentFilepath.includes("/") || this.currentFilepath.includes("\\"))) {
             if (this.isDesktop) {
-              electrobun.rpc?.request?.saveSettings?.({ settings: { lastOpenedFile: this.currentFilepath } }).catch(() => {});
+              this.electrobun?.rpc?.request?.saveSettings?.({ settings: { lastOpenedFile: this.currentFilepath } }).catch(() => {});
             }
           }
           return;
@@ -1147,12 +1168,12 @@ export class CitariumApp {
         this.project = Project.fromDict(data);
         this.currentFilepath = filepath;
         this.currentFileHandle = null;
-        this.isDirty = false;
+        this.isModified = false;
         this.selectedCitationId = this.project.citations.length > 0 ? this.project.citations[0].id : null;
         this.refreshAll();
         if (this.currentFilepath && (this.currentFilepath.includes("/") || this.currentFilepath.includes("\\"))) {
           if (this.isDesktop) {
-            electrobun.rpc?.request?.saveSettings?.({ settings: { lastOpenedFile: this.currentFilepath } }).catch(() => {});
+            this.electrobun?.rpc?.request?.saveSettings?.({ settings: { lastOpenedFile: this.currentFilepath } }).catch(() => {});
           }
         }
       } catch (err) {
@@ -1174,7 +1195,7 @@ export class CitariumApp {
         this.project = Project.fromDict(data);
         this.currentFilepath = null;
         this.currentFileHandle = null;
-        this.isDirty = false;
+        this.isModified = false;
         this.selectedCitationId = this.project.citations.length > 0 ? this.project.citations[0].id : null;
         this.refreshAll();
       }
@@ -1183,40 +1204,40 @@ export class CitariumApp {
     }
   }
 
-  async saveProjectToFile(): Promise<void> {
+  async saveProjectToFile(forceSaveAs: boolean = false): Promise<boolean> {
     const content = JSON.stringify(this.project.toDict(), null, 2);
 
-    // 1. If an active FileHandle exists (from showOpenFilePicker or previous showSaveFilePicker), write directly to it
-    if (this.currentFileHandle && typeof this.currentFileHandle.createWritable === "function") {
+    // 1. If not forcing Save As and an active FileHandle exists, write directly to it
+    if (!forceSaveAs && this.currentFileHandle && typeof this.currentFileHandle.createWritable === "function") {
       try {
         const writable = await this.currentFileHandle.createWritable();
         await writable.write(content);
         await writable.close();
-        this.isDirty = false;
+        this.isModified = false;
         this.updateProjectBadge();
         if (this.currentFilepath) {
-          electrobun.rpc?.request?.saveSettings?.({ settings: { lastOpenedFile: this.currentFilepath } }).catch(() => {});
+          this.electrobun?.rpc?.request?.saveSettings?.({ settings: { lastOpenedFile: this.currentFilepath } }).catch(() => {});
         }
-        return;
+        return true;
       } catch (err) {
         console.warn("Writing to currentFileHandle failed, falling back to save dialog:", err);
         this.currentFileHandle = null;
       }
     }
 
-    // 2. If backend RPC save is available with an absolute path
-    if (this.isDesktop && this.currentFilepath && (this.currentFilepath.includes("/") || this.currentFilepath.includes("\\"))) {
+    // 2. If not forcing Save As and backend RPC save is available with an absolute path
+    if (!forceSaveAs && this.isDesktop && this.currentFilepath && (this.currentFilepath.includes("/") || this.currentFilepath.includes("\\"))) {
       try {
-        const res = await electrobun.rpc?.request?.saveProject?.({
+        const res = await this.electrobun?.rpc?.request?.saveProject?.({
           filepath: this.currentFilepath,
           project: this.project.toDict(),
         });
         if (res?.success) {
-          this.isDirty = false;
+          this.isModified = false;
           this.currentFilepath = res.filepath || this.currentFilepath;
           this.updateProjectBadge();
-          electrobun.rpc?.request?.saveSettings?.({ settings: { lastOpenedFile: this.currentFilepath } }).catch(() => {});
-          return;
+          this.electrobun?.rpc?.request?.saveSettings?.({ settings: { lastOpenedFile: this.currentFilepath } }).catch(() => {});
+          return true;
         }
       } catch (err) {
         console.warn("Backend save failed:", err);
@@ -1237,15 +1258,87 @@ export class CitariumApp {
         if (handle.name) {
           this.currentFilepath = handle.name;
         }
-      }
-      this.isDirty = false;
-      this.updateProjectBadge();
-      if (this.currentFilepath && this.isDesktop) {
-        electrobun.rpc?.request?.saveSettings?.({ settings: { lastOpenedFile: this.currentFilepath } }).catch(() => {});
+        this.isModified = false;
+        this.updateProjectBadge();
+        if (this.currentFilepath && this.isDesktop) {
+          this.electrobun?.rpc?.request?.saveSettings?.({ settings: { lastOpenedFile: this.currentFilepath } }).catch(() => {});
+        }
+        return true;
+      } else {
+        // User cancelled the save dialog or dialog failed
+        return false;
       }
     } catch (err) {
       console.error("Failed to save project:", err);
+      return false;
     }
+  }
+
+  async handleAppClose(): Promise<boolean> {
+    if (!this.isModified) {
+      if (this.isDesktop && this.electrobun?.rpc?.request?.closeWindow) {
+        await this.electrobun.rpc.request.closeWindow({});
+      }
+      return true;
+    }
+
+    // Show OS Message Box for modified changes
+    let response = 2; // default to Cancel
+    if (this.isDesktop && this.electrobun?.rpc?.request?.showMessageBox) {
+      try {
+        const res = await this.electrobun.rpc.request.showMessageBox({
+          type: "question",
+          title: "Citarium",
+          message: `Do you want to save the changes you made to "${this.project.title}"?`,
+          detail: "Your changes will be lost if you don't save them.",
+          buttons: ["Save", "Don't Save", "Cancel"],
+          defaultId: 0,
+          cancelId: 2,
+        });
+        if (res?.success && typeof res.response === "number") {
+          response = res.response;
+        }
+      } catch (err) {
+        console.warn("showMessageBox failed:", err);
+      }
+    } else {
+      // Web / non-desktop fallback: confirm dialog
+      const shouldSave = window.confirm(
+        `Do you want to save changes to "${this.project.title}" before closing?\n\nClick OK to Save, or Cancel to close without saving.`
+      );
+      if (shouldSave) {
+        response = 0; // Save
+      } else {
+        response = 1; // Don't Save
+      }
+    }
+
+    if (response === 1) {
+      // "Don't Save" -> Discard changes and close window
+      this.isModified = false;
+      if (this.isDesktop && this.electrobun?.rpc?.request?.closeWindow) {
+        await this.electrobun.rpc.request.closeWindow({});
+      }
+      return true;
+    }
+
+    if (response === 0) {
+      // "Save" -> Attempt to save the project (opens Save As dialog for new files)
+      const saved = await this.saveProjectToFile();
+      if (saved) {
+        // Saved successfully -> proceed to close window
+        if (this.isDesktop && this.electrobun?.rpc?.request?.closeWindow) {
+          await this.electrobun.rpc.request.closeWindow({});
+        }
+        return true;
+      } else {
+        // User cancelled Save As dialog or save failed -> keep app open
+        return false;
+      }
+    }
+
+    // "Cancel" (response === 2 or any other) -> keep app open
+    return false;
   }
 
 

@@ -151,4 +151,271 @@ test.describe("OS Modals, File Choosers, Native Dialogs, and OS Actions", () => 
     const clipBib = await page.evaluate(() => navigator.clipboard.readText());
     expect(clipBib.length).toBeGreaterThan(50);
   });
+
+  test("OS App Close: Closes immediately without dialog when project is clean / unmodified", async ({ page }) => {
+    await page.evaluate(() => {
+      window.__closedWindowCalled = false;
+      window.__messageBoxCalled = false;
+      window.__electrobunWebviewId = 1;
+      window.electrobun = {
+        rpc: {
+          request: {
+            showMessageBox: async () => {
+              window.__messageBoxCalled = true;
+              return { success: true, response: 0 };
+            },
+            closeWindow: async () => {
+              window.__closedWindowCalled = true;
+              return { success: true };
+            },
+          },
+        },
+      } as any;
+    });
+
+    const result = await page.evaluate(async () => {
+      return await window.app.handleAppClose();
+    });
+
+    expect(result).toBe(true);
+    const msgBoxCalled = await page.evaluate(() => window.__messageBoxCalled);
+    const closedCalled = await page.evaluate(() => window.__closedWindowCalled);
+    expect(msgBoxCalled).toBe(false);
+    expect(closedCalled).toBe(true);
+  });
+
+  test("OS App Close: Modified project prompt -> User clicks Cancel -> Aborts close and retains unsaved changes", async ({ page }) => {
+    // 1. Add citation and modify project
+    await page.locator(".sidebar-panel button", { hasText: "+ Add" }).click();
+    await page.locator("#form-title").fill("Unsaved Close Test Paper");
+
+    await page.evaluate(() => {
+      window.__closedWindowCalled = false;
+      window.__messageBoxOpts = null;
+      window.__electrobunWebviewId = 1;
+      window.electrobun = {
+        rpc: {
+          request: {
+            showMessageBox: async (opts: any) => {
+              window.__messageBoxOpts = opts;
+              return { success: true, response: 2 }; // Index 2: Cancel
+            },
+            closeWindow: async () => {
+              window.__closedWindowCalled = true;
+              return { success: true };
+            },
+          },
+        },
+      } as any;
+    });
+
+    const result = await page.evaluate(async () => {
+      return await window.app.handleAppClose();
+    });
+
+    expect(result).toBe(false);
+    const msgBoxOpts = await page.evaluate(() => window.__messageBoxOpts as any);
+    const closedCalled = await page.evaluate(() => window.__closedWindowCalled);
+
+    expect(msgBoxOpts).toBeTruthy();
+    expect(msgBoxOpts.buttons).toEqual(["Save", "Don't Save", "Cancel"]);
+    expect(msgBoxOpts.type).toBe("question");
+    expect(closedCalled).toBe(false);
+
+    // Project should still be modified and title retained
+    await expect(page.locator("#form-title")).toHaveValue("Unsaved Close Test Paper");
+    await expect(page).toHaveTitle(/• \(unsaved\)/);
+  });
+
+  test("OS App Close: Modified project prompt -> User clicks Don't Save -> Closes window and discards changes", async ({ page }) => {
+    // 1. Add citation and modify project
+    await page.locator(".sidebar-panel button", { hasText: "+ Add" }).click();
+    await page.locator("#form-title").fill("Discard Close Test Paper");
+
+    await page.evaluate(() => {
+      window.__closedWindowCalled = false;
+      window.__messageBoxOpts = null;
+      window.__electrobunWebviewId = 1;
+      window.electrobun = {
+        rpc: {
+          request: {
+            showMessageBox: async (opts: any) => {
+              window.__messageBoxOpts = opts;
+              return { success: true, response: 1 }; // Index 1: Don't Save
+            },
+            closeWindow: async () => {
+              window.__closedWindowCalled = true;
+              return { success: true };
+            },
+          },
+        },
+      } as any;
+    });
+
+    const result = await page.evaluate(async () => {
+      return await window.app.handleAppClose();
+    });
+
+    expect(result).toBe(true);
+    const closedCalled = await page.evaluate(() => window.__closedWindowCalled);
+    expect(closedCalled).toBe(true);
+
+    const isModified = await page.evaluate(() => window.app.isModified);
+    expect(isModified).toBe(false);
+  });
+
+  test("OS App Close: Modified project on existing file -> User clicks Save -> Saves directly and closes window", async ({ page }) => {
+    await page.evaluate(() => {
+      window.__closedWindowCalled = false;
+      window.__saveProjectPayload = null;
+      window.__electrobunWebviewId = 1;
+      window.electrobun = {
+        rpc: {
+          request: {
+            showMessageBox: async () => {
+              return { success: true, response: 0 }; // Index 0: Save
+            },
+            saveProject: async (payload: any) => {
+              window.__saveProjectPayload = payload;
+              return { success: true, filepath: payload.filepath };
+            },
+            closeWindow: async () => {
+              window.__closedWindowCalled = true;
+              return { success: true };
+            },
+            saveSettings: async () => ({ success: true }),
+          },
+        },
+      } as any;
+
+      // Set existing filepath
+      window.app.currentFilepath = "C:/projects/my_research.json";
+      window.app.isModified = true;
+    });
+
+    const result = await page.evaluate(async () => {
+      return await window.app.handleAppClose();
+    });
+
+    expect(result).toBe(true);
+    const savePayload = await page.evaluate(() => window.__saveProjectPayload as any);
+    const closedCalled = await page.evaluate(() => window.__closedWindowCalled);
+
+    expect(savePayload).toBeTruthy();
+    expect(savePayload.filepath).toBe("C:/projects/my_research.json");
+    expect(closedCalled).toBe(true);
+
+    const isModified = await page.evaluate(() => window.app.isModified);
+    expect(isModified).toBe(false);
+  });
+
+  test("OS App Close: Modified project on new file -> User clicks Save -> Opens Save As dialog -> Completes Save -> Closes window", async ({ page }) => {
+    await page.evaluate(() => {
+      window.__closedWindowCalled = false;
+      window.__savePickerCalled = false;
+      window.__savedContent = null;
+      window.__electrobunWebviewId = 1;
+      window.electrobun = {
+        rpc: {
+          request: {
+            showMessageBox: async () => {
+              return { success: true, response: 0 }; // Index 0: Save
+            },
+            closeWindow: async () => {
+              window.__closedWindowCalled = true;
+              return { success: true };
+            },
+            saveSettings: async () => ({ success: true }),
+          },
+        },
+      } as any;
+
+      window.showSaveFilePicker = async () => {
+        window.__savePickerCalled = true;
+        return {
+          name: "saved_research_project.json",
+          createWritable: async () => ({
+            write: async (content: any) => {
+              window.__savedContent = typeof content === "string" ? content : null;
+            },
+            close: async () => {},
+          }),
+        } as any;
+      };
+
+      window.app.currentFilepath = null;
+      window.app.currentFileHandle = null;
+      window.app.isModified = true;
+    });
+
+    const result = await page.evaluate(async () => {
+      return await window.app.handleAppClose();
+    });
+
+    expect(result).toBe(true);
+    const pickerCalled = await page.evaluate(() => window.__savePickerCalled);
+    const savedContent = await page.evaluate(() => window.__savedContent);
+    const closedCalled = await page.evaluate(() => window.__closedWindowCalled);
+
+    expect(pickerCalled).toBe(true);
+    expect(savedContent).toBeTruthy();
+    expect(closedCalled).toBe(true);
+
+    const isModified = await page.evaluate(() => window.app.isModified);
+    expect(isModified).toBe(false);
+  });
+
+  test("OS App Close: Modified project on new file -> User clicks Save -> Opens Save As dialog -> Cancels Save As -> Aborts close and preserves modified changes", async ({ page }) => {
+    // 1. Add citation and modify project
+    await page.locator(".sidebar-panel button", { hasText: "+ Add" }).click();
+    await page.locator("#form-title").fill("Aborted Save As Close Test");
+
+    await page.evaluate(() => {
+      window.__closedWindowCalled = false;
+      window.__savePickerCalled = false;
+      window.__electrobunWebviewId = 1;
+      window.electrobun = {
+        rpc: {
+          request: {
+            showMessageBox: async () => {
+              return { success: true, response: 0 }; // Index 0: Save
+            },
+            closeWindow: async () => {
+              window.__closedWindowCalled = true;
+              return { success: true };
+            },
+            saveSettings: async () => ({ success: true }),
+          },
+        },
+      } as any;
+
+      // Simulate user clicking Cancel on the native Save As file picker
+      window.showSaveFilePicker = async () => {
+        window.__savePickerCalled = true;
+        const abortError = new Error("The user aborted a request.");
+        abortError.name = "AbortError";
+        throw abortError;
+      };
+
+      window.app.currentFilepath = null;
+      window.app.currentFileHandle = null;
+    });
+
+    const result = await page.evaluate(async () => {
+      return await window.app.handleAppClose();
+    });
+
+    expect(result).toBe(false);
+    const pickerCalled = await page.evaluate(() => window.__savePickerCalled);
+    const closedCalled = await page.evaluate(() => window.__closedWindowCalled);
+
+    expect(pickerCalled).toBe(true);
+    expect(closedCalled).toBe(false); // Window must NOT close!
+
+    // Modified state and title must be retained
+    const isModified = await page.evaluate(() => window.app.isModified);
+    expect(isModified).toBe(true);
+    await expect(page.locator("#form-title")).toHaveValue("Aborted Save As Close Test");
+    await expect(page).toHaveTitle(/• \(unsaved\)/);
+  });
 });

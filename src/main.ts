@@ -31,7 +31,7 @@ const citariumRPC = BrowserView.defineRPC<CitariumRPC>({
           return { success: false, error: message };
         }
       },
-      showMessageBox: async ({ type, title, message, detail, buttons }) => {
+      showMessageBox: async ({ type, title, message, detail, buttons, defaultId, cancelId }) => {
         try {
           const res = await Utils.showMessageBox({
             type: type || "warning",
@@ -39,6 +39,8 @@ const citariumRPC = BrowserView.defineRPC<CitariumRPC>({
             message: message || "",
             detail: detail || "",
             buttons: buttons || ["OK"],
+            defaultId: defaultId ?? 0,
+            cancelId: cancelId ?? -1,
           });
           return { success: true, response: res.response };
         } catch (err) {
@@ -86,11 +88,22 @@ const citariumRPC = BrowserView.defineRPC<CitariumRPC>({
           return { success: false, error: message, filepath: null };
         }
       },
+      closeWindow: async () => {
+        try {
+          isClosingAllowed = true;
+          mainWindow.close();
+          return { success: true };
+        } catch (err) {
+          const message = err instanceof Error ? err.message : String(err);
+          return { success: false, error: message };
+        }
+      },
     },
     messages: {},
   },
 });
 
+let isClosingAllowed = false;
 
 const hostPlatform = platform.platform() === "darwin" ? "mac" : platform.platform() === "win32" ? "windows" : "linux";
 
@@ -104,6 +117,20 @@ const mainWindow = new BrowserWindow({
     x: 100,
     y: 80,
   },
+});
+
+// Intercept window close to prompt for unsaved/modified changes
+mainWindow.on("will-close", (event: unknown) => {
+  if (isClosingAllowed) {
+    return;
+  }
+
+  const electrobunEvent = event as { response?: { allow: boolean } };
+  electrobunEvent.response = { allow: false };
+
+  if (mainWindow?.webview) {
+    mainWindow.webview.executeJavascript("window.app.handleAppClose()");
+  }
 });
 
 // Quit application when main window is closed
@@ -200,6 +227,7 @@ ApplicationMenu.on("application-menu-clicked", (event: unknown) => {
     "new-project": "window.app.newProject()",
     "open-project": "window.app.openProjectFileDialog()",
     "save-project": "window.app.saveProjectToFile()",
+    "close-window": "window.app.handleAppClose()",
     "load-example": "window.app.loadExampleProject()",
     "import-bibtex": "window.app.openImportDialog()",
     "export-markdown": "window.app.exportMarkdown()",

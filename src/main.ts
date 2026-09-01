@@ -16,8 +16,9 @@ const citariumRPC = BrowserView.defineRPC<CitariumRPC>({
         try {
           const project = await loadProject(filepath);
           return { success: true, project: project.toDict() };
-        } catch (err: any) {
-          return { success: false, error: err.message };
+        } catch (err) {
+          const message = err instanceof Error ? err.message : String(err);
+          return { success: false, error: message };
         }
       },
       saveProject: async ({ filepath, project }) => {
@@ -29,8 +30,9 @@ const citariumRPC = BrowserView.defineRPC<CitariumRPC>({
           await saveProject(p, filepath);
           await saveSettings({ lastOpenedFile: filepath });
           return { success: true, filepath };
-        } catch (err: any) {
-          return { success: false, error: err.message };
+        } catch (err) {
+          const message = err instanceof Error ? err.message : String(err);
+          return { success: false, error: message };
         }
       },
       showMessageBox: async ({ type, title, message, detail, buttons }) => {
@@ -43,19 +45,21 @@ const citariumRPC = BrowserView.defineRPC<CitariumRPC>({
             buttons: buttons || ["OK"],
           });
           return { success: true, response: res.response };
-        } catch (err: any) {
-          return { success: false, error: err.message, response: 0 };
+        } catch (err) {
+          const message = err instanceof Error ? err.message : String(err);
+          return { success: false, error: message, response: 0 };
         }
       },
       getSettings: async () => {
         try {
           const settings = await loadSettings();
           return { success: true, settings };
-        } catch (err: any) {
+        } catch (err) {
+          const message = err instanceof Error ? err.message : String(err);
           return {
             success: false,
             settings: { lastOpenedFile: null, theme: "light", recentFiles: [] },
-            error: err.message,
+            error: message,
           };
         }
       },
@@ -63,8 +67,9 @@ const citariumRPC = BrowserView.defineRPC<CitariumRPC>({
         try {
           const updated = await saveSettings(settings);
           return { success: true, settings: updated };
-        } catch (err: any) {
-          return { success: false, error: err.message };
+        } catch (err) {
+          const message = err instanceof Error ? err.message : String(err);
+          return { success: false, error: message };
         }
       },
       openFileDialog: async ({ startingFolder, allowedFileTypes }) => {
@@ -80,8 +85,9 @@ const citariumRPC = BrowserView.defineRPC<CitariumRPC>({
             return { success: true, filepath: paths[0] };
           }
           return { success: true, filepath: null };
-        } catch (err: any) {
-          return { success: false, error: err.message, filepath: null };
+        } catch (err) {
+          const message = err instanceof Error ? err.message : String(err);
+          return { success: false, error: message, filepath: null };
         }
       },
     },
@@ -116,13 +122,13 @@ ApplicationMenu.setApplicationMenu([
         {
           label: "Citarium",
           submenu: [
-            { role: "about" },
+            { role: "about" as const },
             { type: "divider" as const },
-            { role: "hide" },
-            { role: "hideOthers" },
-            { role: "showAll" },
+            { role: "hide" as const },
+            { role: "hideOthers" as const },
+            { role: "showAll" as const },
             { type: "divider" as const },
-            { role: "quit" },
+            { role: "quit" as const },
           ],
         },
       ]
@@ -133,13 +139,13 @@ ApplicationMenu.setApplicationMenu([
       { label: "New Project", accelerator: "CmdOrCtrl+N", action: "new-project" },
       { label: "Open Project...", accelerator: "CmdOrCtrl+O", action: "open-project" },
       { label: "Save Project", accelerator: "CmdOrCtrl+S", action: "save-project" },
-      { type: "divider" },
+      { type: "divider" as const },
       { label: "Import BibTeX (.bib)...", action: "import-bibtex" },
       { label: "Export Markdown (.md)", action: "export-markdown" },
       { label: "Export Plain Text (.txt)", action: "export-text" },
       { label: "Export BibTeX (.bib)", action: "export-bibtex" },
-      { type: "divider" },
-      { role: "close" },
+      { type: "divider" as const },
+      { role: "close" as const },
     ],
   },
   {
@@ -183,9 +189,15 @@ ApplicationMenu.setApplicationMenu([
   },
 ]);
 
+interface ApplicationMenuEvent {
+  data?: { action?: string };
+  action?: string;
+}
+
 // Handle Native Menu Item Clicks
-ApplicationMenu.on("application-menu-clicked", (event: any) => {
-  const action = event?.data?.action || event?.action;
+ApplicationMenu.on("application-menu-clicked", (event: unknown) => {
+  const menuEvent = event as ApplicationMenuEvent;
+  const action = menuEvent?.data?.action || menuEvent?.action;
   if (!action) return;
 
   const actionToJsMap: Record<string, string> = {

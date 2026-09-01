@@ -12,12 +12,12 @@ test.describe("OS Modals, File Choosers, Native Dialogs, and OS Actions", () => 
   test("OS File Open Dialog: Triggering file chooser and loading project JSON", async ({ page }) => {
     // Disable showOpenFilePicker to test HTML file input chooser fallback
     await page.evaluate(() => {
-      delete (window as any).showOpenFilePicker;
+      delete window.showOpenFilePicker;
     });
 
     // Listen for file chooser event
     const fileChooserPromise = page.waitForEvent("filechooser");
-    await page.evaluate(() => (window as any).app.openProjectFileDialog());
+    await page.evaluate(() => window.app?.openProjectFileDialog());
     const fileChooser = await fileChooserPromise;
 
     // Provide example JSON file
@@ -34,49 +34,49 @@ test.describe("OS Modals, File Choosers, Native Dialogs, and OS Actions", () => 
   test("OS Save File Picker API: Triggers showSaveFilePicker with valid options", async ({ page }) => {
     // Mock showSaveFilePicker in browser context to spy on options
     await page.evaluate(() => {
-      (window as any).__lastSavePickerCall = null;
-      (window as any).showSaveFilePicker = async (options: any) => {
-        (window as any).__lastSavePickerCall = options;
+      window.__lastSavePickerCall = null;
+      window.showSaveFilePicker = async (options) => {
+        window.__lastSavePickerCall = options ?? null;
         return {
           createWritable: async () => ({
-            write: async (content: any) => {
-              (window as any).__lastSavedContent = content;
+            write: async (content: string | BufferSource | Blob) => {
+              window.__lastSavedContent = typeof content === "string" ? content : null;
             },
             close: async () => {},
           }),
-        };
+        } as FileSystemFileHandle;
       };
     });
 
     // Load example project
-    await page.evaluate(() => (window as any).app.loadExampleProject());
+    await page.evaluate(() => window.app?.loadExampleProject());
     await expect(page).toHaveTitle(/Domestic Feline/);
 
     // Trigger Markdown Export
-    await page.evaluate(() => (window as any).app.exportMarkdown());
+    await page.evaluate(() => window.app?.exportMarkdown());
 
-    const saveCall = await page.evaluate(() => (window as any).__lastSavePickerCall);
+    const saveCall = await page.evaluate(() => window.__lastSavePickerCall);
     expect(saveCall).toBeTruthy();
-    expect(saveCall.suggestedName).toContain(".md");
-    expect(saveCall.types[0].description).toContain("Markdown");
+    expect(saveCall?.suggestedName).toContain(".md");
+    expect(saveCall?.types?.[0]?.description).toContain("Markdown");
 
-    const savedContent = await page.evaluate(() => (window as any).__lastSavedContent);
+    const savedContent = await page.evaluate(() => window.__lastSavedContent);
     expect(savedContent).toContain("# Domestic Feline");
   });
 
   test("OS File Download Fallback: Triggers download event when showSaveFilePicker is absent", async ({ page }) => {
     // Disable showSaveFilePicker to test fallback download behavior
     await page.evaluate(() => {
-      delete (window as any).showSaveFilePicker;
+      delete window.showSaveFilePicker;
     });
 
     // Load example project
-    await page.evaluate(() => (window as any).app.loadExampleProject());
+    await page.evaluate(() => window.app?.loadExampleProject());
     await expect(page).toHaveTitle(/Domestic Feline/);
 
     // Trigger export and wait for download event
     const downloadPromise = page.waitForEvent("download");
-    await page.evaluate(() => (window as any).app.exportBibtex());
+    await page.evaluate(() => window.app?.exportBibtex());
     const download = await downloadPromise;
 
     expect(download.suggestedFilename()).toContain(".bib");
@@ -96,7 +96,7 @@ test.describe("OS Modals, File Choosers, Native Dialogs, and OS Actions", () => 
       await dialog.dismiss();
     });
 
-    await page.evaluate(() => (window as any).app.newProject());
+    await page.evaluate(() => window.app?.newProject());
     // Form title should still be retained because dialog was cancelled
     await expect(page.locator("#form-title")).toHaveValue("Unsaved Scratch Work");
 
@@ -106,7 +106,7 @@ test.describe("OS Modals, File Choosers, Native Dialogs, and OS Actions", () => 
       await dialog.accept();
     });
 
-    await page.evaluate(() => (window as any).app.newProject());
+    await page.evaluate(() => window.app?.newProject());
     // After accepting, project resets and title is cleared
     await expect(page.locator("#form-title")).toHaveValue("");
     await expect(page).toHaveTitle(/^New Writing Project — Citarium$/);
@@ -132,7 +132,7 @@ test.describe("OS Modals, File Choosers, Native Dialogs, and OS Actions", () => 
     await context.grantPermissions(["clipboard-read", "clipboard-write"]);
 
     // Load example project
-    await page.evaluate(() => (window as any).app.loadExampleProject());
+    await page.evaluate(() => window.app?.loadExampleProject());
     await expect(page).toHaveTitle(/Domestic Feline/);
 
     // Test Copy Reference button

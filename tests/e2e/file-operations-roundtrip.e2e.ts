@@ -12,7 +12,7 @@ test.describe("File Operations, In-Depth UI Editing, and Full Roundtrip Verifica
 
   test("Create New File: Build project from scratch, add citations & ideas, save to file, and verify on reopen", async ({ page }) => {
     // 1. Start fresh project
-    await page.evaluate(() => (window as any).app.newProject());
+    await page.evaluate(() => window.app?.newProject());
     await expect(page).toHaveTitle(/^New Writing Project — Citarium$/);
 
     // 2. Add first citation
@@ -46,18 +46,18 @@ test.describe("File Operations, In-Depth UI Editing, and Full Roundtrip Verifica
     // 3. Save project to file
     let savedJson = "";
     await page.evaluate(() => {
-      (window as any).showSaveFilePicker = async () => ({
+      window.showSaveFilePicker = async () => ({
         createWritable: async () => ({
-          write: async (content: string) => {
-            (window as any).__savedNewFileJson = content;
+          write: async (content: string | BufferSource | Blob) => {
+            window.__savedNewFileJson = typeof content === "string" ? content : null;
           },
           close: async () => {},
         }),
-      });
+      } as FileSystemFileHandle);
     });
 
-    await page.evaluate(() => (window as any).app.saveProjectToFile());
-    savedJson = await page.evaluate(() => (window as any).__savedNewFileJson);
+    await page.evaluate(() => window.app?.saveProjectToFile());
+    savedJson = (await page.evaluate(() => window.__savedNewFileJson)) ?? "";
     expect(savedJson).toBeTruthy();
 
     const parsed = JSON.parse(savedJson);
@@ -73,15 +73,15 @@ test.describe("File Operations, In-Depth UI Editing, and Full Roundtrip Verifica
 
     try {
       // Reset workspace
-      await page.evaluate(() => (window as any).app.newProject());
+      await page.evaluate(() => window.app?.newProject());
       await expect(page.locator("#citation-list .citation-item")).toHaveCount(0);
 
       // Open saved file via file chooser (fallback HTML input)
       await page.evaluate(() => {
-        delete (window as any).showOpenFilePicker;
+        delete window.showOpenFilePicker;
       });
       const fileChooserPromise = page.waitForEvent("filechooser");
-      await page.evaluate(() => (window as any).app.openProjectFileDialog());
+      await page.evaluate(() => window.app?.openProjectFileDialog());
       const fileChooser = await fileChooserPromise;
       await fileChooser.setFiles(tempFilePath);
 
@@ -120,28 +120,28 @@ test.describe("File Operations, In-Depth UI Editing, and Full Roundtrip Verifica
 
     // Set up mock showOpenFilePicker in browser context
     await page.evaluate(({ exampleJson, filename }) => {
-      (window as any).__fileContentStore = exampleJson;
-      (window as any).__savedToOpenedFile = false;
+      window.__fileContentStore = exampleJson;
+      window.__savedToOpenedFile = false;
 
       const mockFile = new File([exampleJson], filename, { type: "application/json" });
 
-      (window as any).showOpenFilePicker = async () => [
+      window.showOpenFilePicker = async () => [
         {
           name: filename,
           getFile: async () => mockFile,
           createWritable: async () => ({
-            write: async (content: string) => {
-              (window as any).__fileContentStore = content;
-              (window as any).__savedToOpenedFile = true;
+            write: async (content: string | BufferSource | Blob) => {
+              window.__fileContentStore = typeof content === "string" ? content : null;
+              window.__savedToOpenedFile = true;
             },
             close: async () => {},
           }),
-        },
+        } as unknown as FileSystemFileHandle,
       ];
     }, { exampleJson: originalContent, filename: "feline_behavior_annotated_bibliography.json" });
 
     // 1. OPEN file using app.openProjectFileDialog()
-    await page.evaluate(() => (window as any).app.openProjectFileDialog());
+    await page.evaluate(() => window.app?.openProjectFileDialog());
 
     // Verify title loaded in UI
     await expect(page.locator("#form-title")).toHaveValue(originalFirstTitle);
@@ -153,13 +153,13 @@ test.describe("File Operations, In-Depth UI Editing, and Full Roundtrip Verifica
     await expect(page).toHaveTitle(/• \(unsaved\)/);
 
     // 3. SAVE via File Menu / app.saveProjectToFile()
-    await page.evaluate(() => (window as any).app.saveProjectToFile());
+    await page.evaluate(() => window.app?.saveProjectToFile());
 
     // 4. VERIFY: The opened file handle was written to and contains the updated title with " 1"
-    const savedToOpenedFile = await page.evaluate(() => (window as any).__savedToOpenedFile);
+    const savedToOpenedFile = await page.evaluate(() => window.__savedToOpenedFile);
     expect(savedToOpenedFile).toBe(true);
 
-    const savedFileJson = await page.evaluate(() => (window as any).__fileContentStore);
+    const savedFileJson = (await page.evaluate(() => window.__fileContentStore)) ?? "";
     const parsedSaved = JSON.parse(savedFileJson);
     expect(parsedSaved.citations[0].title).toBe(updatedTitle);
     await expect(page).not.toHaveTitle(/• \(unsaved\)/);
@@ -168,10 +168,10 @@ test.describe("File Operations, In-Depth UI Editing, and Full Roundtrip Verifica
   test("Comprehensive Lifecycle: Load -> Edit -> Add -> Save -> Reload Roundtrip", async ({ page }) => {
     // 1. LOAD: Open Project using File Chooser
     await page.evaluate(() => {
-      delete (window as any).showOpenFilePicker;
+      delete window.showOpenFilePicker;
     });
     const fileChooserPromise = page.waitForEvent("filechooser");
-    await page.evaluate(() => (window as any).app.openProjectFileDialog());
+    await page.evaluate(() => window.app?.openProjectFileDialog());
     const fileChooser = await fileChooserPromise;
     await fileChooser.setFiles(EXAMPLE_FILE);
 
@@ -217,19 +217,19 @@ test.describe("File Operations, In-Depth UI Editing, and Full Roundtrip Verifica
     // 4. SAVE: Mock saveTextFileWithDialog / showSaveFilePicker to capture the saved serialized JSON
     let capturedSavedJson: string = "";
     await page.evaluate(() => {
-      (window as any).showSaveFilePicker = async () => ({
+      window.showSaveFilePicker = async () => ({
         createWritable: async () => ({
-          write: async (content: string) => {
-            (window as any).__savedJsonData = content;
+          write: async (content: string | BufferSource | Blob) => {
+            window.__savedJsonData = typeof content === "string" ? content : null;
           },
           close: async () => {},
         }),
-      });
+      } as FileSystemFileHandle);
     });
 
-    await page.evaluate(() => (window as any).app.saveProjectToFile());
+    await page.evaluate(() => window.app?.saveProjectToFile());
 
-    capturedSavedJson = await page.evaluate(() => (window as any).__savedJsonData);
+    capturedSavedJson = (await page.evaluate(() => window.__savedJsonData)) ?? "";
     expect(capturedSavedJson).toBeTruthy();
 
     const parsedSaved = JSON.parse(capturedSavedJson);
@@ -244,15 +244,15 @@ test.describe("File Operations, In-Depth UI Editing, and Full Roundtrip Verifica
 
     try {
       // Clear project first
-      await page.evaluate(() => (window as any).app.newProject());
+      await page.evaluate(() => window.app?.newProject());
       await expect(page).toHaveTitle(/^New Writing Project — Citarium$/);
 
       // Reload the saved file
       await page.evaluate(() => {
-        delete (window as any).showOpenFilePicker;
+        delete window.showOpenFilePicker;
       });
       const reloadChooserPromise = page.waitForEvent("filechooser");
-      await page.evaluate(() => (window as any).app.openProjectFileDialog());
+      await page.evaluate(() => window.app?.openProjectFileDialog());
       const reloadChooser = await reloadChooserPromise;
       await reloadChooser.setFiles(tempSavedPath);
 

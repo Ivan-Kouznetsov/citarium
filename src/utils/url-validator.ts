@@ -67,10 +67,12 @@ export function extractDoi(urlOrDoi: string): string | null {
   return null;
 }
 
+export type DoiMetadata = Record<string, unknown>;
+
 export async function fetchDoiMetadata(
   doi: string,
   timeoutMs: number = 5000
-): Promise<Record<string, any> | null> {
+): Promise<DoiMetadata | null> {
   if (!doi) return null;
 
   // 1. Try DOI Content Negotiation (doi.org)
@@ -88,7 +90,7 @@ export async function fetchDoiMetadata(
     });
     clearTimeout(timer);
     if (res.status === 200) {
-      return (await res.json()) as Record<string, any>;
+      return (await res.json()) as DoiMetadata;
     }
   } catch {
     // fallback to Crossref
@@ -108,8 +110,8 @@ export async function fetchDoiMetadata(
     });
     clearTimeout(timer);
     if (res.status === 200) {
-      const data = (await res.json()) as Record<string, any>;
-      return (data.message || data) as Record<string, any>;
+      const data = (await res.json()) as Record<string, unknown>;
+      return (data.message || data) as DoiMetadata;
     }
   } catch {
     // ignore
@@ -119,7 +121,7 @@ export async function fetchDoiMetadata(
 }
 
 export function doiMetadataMatchesTitles(
-  metadata: Record<string, any>,
+  metadata: DoiMetadata,
   titles: string[]
 ): boolean {
   if (!metadata || !titles.length) return false;
@@ -154,18 +156,19 @@ export function doiMetadataMatchesTitles(
   }
 
   // Also include author and editor names if present
-  for (const role of ["author", "editor"]) {
+  for (const role of ["author", "editor"] as const) {
     const people = metadata[role];
     if (Array.isArray(people)) {
       for (const person of people) {
         if (typeof person === "object" && person !== null) {
-          const given = person.given || "";
-          const family = person.family || "";
+          const personObj = person as { given?: unknown; family?: unknown; name?: unknown };
+          const given = typeof personObj.given === "string" ? personObj.given : "";
+          const family = typeof personObj.family === "string" ? personObj.family : "";
           if (given || family) {
             textParts.push(`${given} ${family}`.trim());
           }
-          if (person.name) {
-            textParts.push(String(person.name));
+          if (personObj.name) {
+            textParts.push(String(personObj.name));
           }
         }
       }

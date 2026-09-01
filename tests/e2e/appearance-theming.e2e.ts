@@ -42,7 +42,7 @@ test.describe("Appearance, Theming, and Cross-Platform Styling", () => {
     await expect(html).toHaveAttribute("data-theme", "light");
 
     // Toggle theme to dark via window.app
-    await page.evaluate(() => (window as any).app.toggleTheme());
+    await page.evaluate(() => window.app?.toggleTheme());
     await expect(html).toHaveAttribute("data-theme", "dark");
 
     // Body background should reflect dark theme background color
@@ -52,7 +52,7 @@ test.describe("Appearance, Theming, and Cross-Platform Styling", () => {
     expect(darkBg).toBeTruthy();
 
     // Toggle back to light
-    await page.evaluate(() => (window as any).app.toggleTheme());
+    await page.evaluate(() => window.app?.toggleTheme());
     await expect(html).toHaveAttribute("data-theme", "light");
   });
 

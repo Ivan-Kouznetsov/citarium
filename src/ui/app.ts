@@ -925,8 +925,9 @@ export class CitariumApp {
       } else {
         if (summary) summary.innerText = `Found ${this.parsedBibtexCitations.length} citation(s) ready to import.`;
       }
-    } catch (e: any) {
-      if (summary) summary.innerText = `Error: ${e.message}`;
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      if (summary) summary.innerText = `Error: ${msg}`;
     }
   }
 
@@ -1082,7 +1083,7 @@ export class CitariumApp {
           // User cancelled dialog
           return;
         }
-      } catch (err: any) {
+      } catch (err) {
         console.warn("Native openFileDialog failed, falling back to web file picker:", err);
       }
     }
@@ -1117,8 +1118,8 @@ export class CitariumApp {
           }
           return;
         }
-      } catch (err: any) {
-        if (err?.name === "AbortError") {
+      } catch (err) {
+        if (err instanceof Error && err.name === "AbortError") {
           return;
         }
         console.warn("showOpenFilePicker failed, falling back to file input:", err);
@@ -1154,7 +1155,7 @@ export class CitariumApp {
             electrobun.rpc?.request?.saveSettings?.({ settings: { lastOpenedFile: this.currentFilepath } }).catch(() => {});
           }
         }
-      } catch (err: any) {
+      } catch (err) {
         console.error("Failed to load project:", err);
       }
     };
@@ -1197,7 +1198,7 @@ export class CitariumApp {
           electrobun.rpc?.request?.saveSettings?.({ settings: { lastOpenedFile: this.currentFilepath } }).catch(() => {});
         }
         return;
-      } catch (err: any) {
+      } catch (err) {
         console.warn("Writing to currentFileHandle failed, falling back to save dialog:", err);
         this.currentFileHandle = null;
       }
@@ -1217,7 +1218,7 @@ export class CitariumApp {
           electrobun.rpc?.request?.saveSettings?.({ settings: { lastOpenedFile: this.currentFilepath } }).catch(() => {});
           return;
         }
-      } catch (err: any) {
+      } catch (err) {
         console.warn("Backend save failed:", err);
       }
     }
@@ -1242,7 +1243,7 @@ export class CitariumApp {
       if (this.currentFilepath && this.isDesktop) {
         electrobun.rpc?.request?.saveSettings?.({ settings: { lastOpenedFile: this.currentFilepath } }).catch(() => {});
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error("Failed to save project:", err);
     }
   }
@@ -1296,8 +1297,8 @@ export class CitariumApp {
         await writable.write(content);
         await writable.close();
         return handle;
-      } catch (err: any) {
-        if (err?.name === "AbortError") {
+      } catch (err) {
+        if (err instanceof Error && err.name === "AbortError") {
           // User cancelled the save dialog
           return null;
         }

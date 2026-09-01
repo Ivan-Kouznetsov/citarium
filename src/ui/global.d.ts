@@ -1,6 +1,7 @@
-import type Electrobun from "electrobun/view";
+import type { Electroview } from "electrobun/view";
 import type { CitariumRPC } from "../rpc-types";
 import type { CitariumApp } from "./app";
+import type { CitariumSettings } from "../io/settings";
 
 declare global {
   interface File {
@@ -30,18 +31,25 @@ declare global {
   }
 
   interface FileSystemFileHandle {
-    readonly name: string;
-    readonly kind: "file";
+    readonly name?: string;
+    readonly kind?: "file";
     getFile(): Promise<File>;
     createWritable(options?: { keepExistingData?: boolean }): Promise<FileSystemWritableFileStream>;
   }
 
   interface Window {
     __electrobunWebviewId?: number | string;
-    electrobun?: InstanceType<typeof Electrobun.Electroview<CitariumRPC>>;
+    electrobun?: Electroview<ReturnType<typeof Electroview.defineRPC<CitariumRPC>>>;
     app?: CitariumApp;
     showOpenFilePicker?(options?: OpenFilePickerOptions): Promise<FileSystemFileHandle[]>;
     showSaveFilePicker?(options?: SaveFilePickerOptions): Promise<FileSystemFileHandle>;
+    _capturedSavedSettings?: Partial<CitariumSettings> | null;
+    __lastSavePickerCall?: SaveFilePickerOptions | null;
+    __lastSavedContent?: string | null;
+    __savedNewFileJson?: string | null;
+    __savedJsonData?: string | null;
+    __fileContentStore?: string | null;
+    __savedToOpenedFile?: boolean | null;
   }
 }
 

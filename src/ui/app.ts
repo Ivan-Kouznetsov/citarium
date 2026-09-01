@@ -10,6 +10,16 @@ import { AsyncURLChecker } from "../utils/url-validator";
 import Electrobun, { Electroview } from "electrobun/view";
 import type { CitariumRPC } from "../rpc-types";
 
+export interface ContextMenuItem {
+  label: string;
+  shortcut?: string;
+  disabled?: boolean;
+  action: () => void | Promise<void>;
+  danger?: boolean;
+}
+
+export type ContextMenuEntry = ContextMenuItem | { type: "divider" };
+
 const rpc = Electroview.defineRPC<CitariumRPC>({
   maxRequestTime: 300000,
   handlers: { requests: {}, messages: {} },
@@ -24,6 +34,19 @@ export class CitariumApp {
   currentWorkspace: "references" | "bibliography" | "overview" = "references";
   currentSubTab: "reference" | "annotation" = "reference";
   isModified: boolean = false;
+
+  get isDebugMode(): boolean {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("debug") === "1" || params.get("debug") === "true") {
+        return true;
+      }
+      if ((window as unknown as { CITARIUM_DEBUG?: boolean }).CITARIUM_DEBUG === true) {
+        return true;
+      }
+    } catch {}
+    return false;
+  }
 
   get isDirty(): boolean {
     return this.isModified;
@@ -92,6 +115,9 @@ export class CitariumApp {
 
     // Native In-App Menubar & Dropdowns (Active on Linux)
     this.setupMenubarHover();
+
+    // Desktop-Native Context Menu
+    this.setupContextMenu();
   }
 
   async loadInitialSettings(): Promise<void> {
@@ -274,6 +300,7 @@ export class CitariumApp {
 
   closeAllMenus(): void {
     this.isAnyMenuOpen = false;
+    this.closeContextMenu();
     document.querySelectorAll(".menubar-dropdown").forEach((m) => {
       m.classList.remove("active");
     });
@@ -326,6 +353,22 @@ export class CitariumApp {
 
       if (e.key === "Escape") {
         this.closeAllMenus();
+      } else if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+        const menu = document.getElementById("app-context-menu");
+        if (menu) {
+          e.preventDefault();
+          const items = Array.from(menu.querySelectorAll<HTMLButtonElement>(".context-menu-item:not(.disabled)"));
+          if (items.length > 0) {
+            const activeIdx = items.indexOf(document.activeElement as HTMLButtonElement);
+            let nextIdx = 0;
+            if (e.key === "ArrowDown") {
+              nextIdx = activeIdx >= 0 && activeIdx < items.length - 1 ? activeIdx + 1 : 0;
+            } else {
+              nextIdx = activeIdx > 0 ? activeIdx - 1 : items.length - 1;
+            }
+            items[nextIdx].focus();
+          }
+        }
       } else if (modKey && e.key.toLowerCase() === "t") {
         e.preventDefault();
         this.toggleTheme();
@@ -360,12 +403,321 @@ export class CitariumApp {
   }
 
   setupGlobalClick(): void {
-    window.addEventListener("click", (e) => {
-      const target = e.target as HTMLElement;
-      if (!target.closest(".menubar-item") && !target.closest(".menu-item-container")) {
+    const handleGlobalDismiss = (e: Event) => {
+      const target = e.target as HTMLElement | null;
+      if (!target?.closest(".menubar-item") && !target?.closest(".menu-item-container") && !target?.closest(".app-context-menu")) {
         this.closeAllMenus();
       }
+    };
+
+    window.addEventListener("pointerdown", handleGlobalDismiss);
+    window.addEventListener("click", handleGlobalDismiss);
+    window.addEventListener("scroll", () => this.closeContextMenu(), { passive: true });
+    window.addEventListener("resize", () => this.closeContextMenu(), { passive: true });
+  }
+
+  setupContextMenu(): void {
+    window.addEventListener("contextmenu", (e: MouseEvent) => {
+      if (this.isDebugMode) {
+        // Debug flag active: allow browser context menu with "Inspect Element" & DevTools
+        return;
+      }
+
+      // Intercept and prevent the browser context menu
+      e.preventDefault();
+      this.closeContextMenu();
+
+      const target = e.target as HTMLElement | null;
+      if (!target) return;
+
+      const mod = this.currentPlatform === "mac" ? "Cmd" : "Ctrl";
+      const menuEntries: ContextMenuEntry[] = [];
+
+      // Case 1: Target is an editable input or textarea
+      const isInput =
+        target instanceof HTMLInputElement &&
+        !["checkbox", "radio", "button", "submit", "file", "range", "color"].includes(target.type.toLowerCase());
+      const isTextarea = target instanceof HTMLTextAreaElement;
+      const isContentEditable = (target as HTMLElement).isContentEditable;
+
+      if (isInput || isTextarea || isContentEditable) {
+        const inputEl = target as HTMLInputElement | HTMLTextAreaElement;
+        const isReadOnly = Boolean((inputEl as HTMLInputElement).readOnly || (inputEl as HTMLInputElement).disabled);
+        const start = typeof inputEl.selectionStart === "number" ? inputEl.selectionStart : 0;
+        const end = typeof inputEl.selectionEnd === "number" ? inputEl.selectionEnd : 0;
+        const hasSelection = end > start;
+
+        menuEntries.push(
+          {
+            label: "Undo",
+            shortcut: `${mod}+Z`,
+            action: () => {
+              inputEl.focus();
+              document.execCommand("undo");
+            },
+          },
+          {
+            label: "Redo",
+            shortcut: this.currentPlatform === "mac" ? "Cmd+Shift+Z" : "Ctrl+Y",
+            action: () => {
+              inputEl.focus();
+              document.execCommand("redo");
+            },
+          },
+          { type: "divider" },
+          {
+            label: "Cut",
+            shortcut: `${mod}+X`,
+            disabled: isReadOnly || !hasSelection,
+            action: async () => {
+              inputEl.focus();
+              if (hasSelection && typeof inputEl.value === "string") {
+                const selectedText = inputEl.value.substring(start, end);
+                try {
+                  await navigator.clipboard.writeText(selectedText);
+                } catch {
+                  document.execCommand("cut");
+                }
+                if (!isReadOnly) {
+                  inputEl.setRangeText("", start, end, "end");
+                  inputEl.dispatchEvent(new Event("input", { bubbles: true }));
+                }
+              }
+            },
+          },
+          {
+            label: "Copy",
+            shortcut: `${mod}+C`,
+            disabled: !hasSelection,
+            action: async () => {
+              if (hasSelection && typeof inputEl.value === "string") {
+                const selectedText = inputEl.value.substring(start, end);
+                try {
+                  await navigator.clipboard.writeText(selectedText);
+                } catch {
+                  document.execCommand("copy");
+                }
+              }
+            },
+          },
+          {
+            label: "Paste",
+            shortcut: `${mod}+V`,
+            disabled: isReadOnly,
+            action: async () => {
+              inputEl.focus();
+              try {
+                const text = await navigator.clipboard.readText();
+                if (typeof text === "string" && !isReadOnly) {
+                  inputEl.setRangeText(text, start, end, "end");
+                  inputEl.dispatchEvent(new Event("input", { bubbles: true }));
+                }
+              } catch {
+                document.execCommand("paste");
+              }
+            },
+          },
+          { type: "divider" },
+          {
+            label: "Select All",
+            shortcut: `${mod}+A`,
+            action: () => {
+              inputEl.focus();
+              if (typeof inputEl.select === "function") {
+                inputEl.select();
+              } else {
+                document.execCommand("selectAll");
+              }
+            },
+          }
+        );
+      } else {
+        // Case 2: Citation Item in Sidebar or UI
+        const citationItem = target.closest(".citation-item") as HTMLElement | null;
+        const citationId = citationItem?.getAttribute("data-citation-id");
+
+        // Case 3: Quote Row in Annotation Studio
+        const quoteRow = target.closest("[data-quote-id]") as HTMLElement | null;
+        const quoteId = quoteRow?.getAttribute("data-quote-id");
+
+        // Case 4: Text selected on non-editable element
+        const selection = window.getSelection();
+        const selectedText = selection ? selection.toString().trim() : "";
+
+        if (citationId) {
+          const cit = this.project.getCitation(citationId);
+          if (cit) {
+            this.selectCitation(citationId);
+            menuEntries.push(
+              {
+                label: "Edit Reference",
+                action: () => {
+                  this.selectWorkspace("references");
+                  this.selectSubTab("reference");
+                  const titleInput = document.getElementById("form-title") as HTMLInputElement | null;
+                  titleInput?.focus();
+                },
+              },
+              {
+                label: "Copy APA 7 Citation",
+                shortcut: `${mod}+C`,
+                action: async () => {
+                  const text = this.apa7.formatReference(cit, "text");
+                  await navigator.clipboard.writeText(text);
+                },
+              },
+              {
+                label: "Copy BibTeX Entry",
+                action: async () => {
+                  const text = BibTeXFormatter.formatCitation(cit);
+                  await navigator.clipboard.writeText(text);
+                },
+              },
+              {
+                label: "Duplicate Reference",
+                action: () => {
+                  this.duplicateCitation();
+                },
+              },
+              { type: "divider" },
+              {
+                label: "Delete Reference",
+                danger: true,
+                action: async () => {
+                  await this.deleteCitation();
+                },
+              }
+            );
+          }
+        } else if (quoteId) {
+          const curCit = this.getSelectedCitation();
+          const quote = curCit?.annotation.quotes.find((q) => q.id === quoteId);
+          if (quote) {
+            menuEntries.push(
+              {
+                label: "Edit Quote / Idea",
+                action: () => {
+                  this.editQuoteModal(quoteId);
+                },
+              },
+              {
+                label: "Copy Quote Text",
+                shortcut: `${mod}+C`,
+                action: async () => {
+                  await navigator.clipboard.writeText(quote.quoteText);
+                },
+              },
+              { type: "divider" },
+              {
+                label: "Delete Quote",
+                danger: true,
+                action: () => {
+                  this.deleteQuote(quoteId);
+                },
+              }
+            );
+          }
+        } else if (selectedText) {
+          menuEntries.push(
+            {
+              label: "Copy",
+              shortcut: `${mod}+C`,
+              action: async () => {
+                await navigator.clipboard.writeText(selectedText);
+              },
+            },
+            {
+              label: "Select All",
+              shortcut: `${mod}+A`,
+              action: () => {
+                document.execCommand("selectAll");
+              },
+            }
+          );
+        }
+      }
+
+      // If no entries matched (blank canvas / general areas), do not display any context menu
+      if (menuEntries.length === 0) {
+        return;
+      }
+
+      this.showContextMenu(e.clientX, e.clientY, menuEntries);
     });
+  }
+
+  showContextMenu(x: number, y: number, entries: ContextMenuEntry[]): void {
+    this.closeContextMenu();
+
+    const menuEl = document.createElement("div");
+    menuEl.id = "app-context-menu";
+    menuEl.className = "app-context-menu";
+    menuEl.setAttribute("role", "menu");
+    menuEl.setAttribute("tabindex", "-1");
+
+    entries.forEach((entry) => {
+      if ("type" in entry && entry.type === "divider") {
+        const divider = document.createElement("div");
+        divider.className = "context-menu-divider";
+        menuEl.appendChild(divider);
+      } else if ("label" in entry) {
+        const itemBtn = document.createElement("button");
+        itemBtn.className = `context-menu-item ${entry.danger ? "danger" : ""}`;
+        itemBtn.setAttribute("role", "menuitem");
+        if (entry.disabled) {
+          itemBtn.disabled = true;
+          itemBtn.classList.add("disabled");
+        }
+
+        const labelSpan = document.createElement("span");
+        labelSpan.className = "context-menu-label";
+        labelSpan.innerText = entry.label;
+        itemBtn.appendChild(labelSpan);
+
+        if (entry.shortcut) {
+          const shortcutSpan = document.createElement("span");
+          shortcutSpan.className = "context-menu-shortcut";
+          shortcutSpan.innerText = entry.shortcut;
+          itemBtn.appendChild(shortcutSpan);
+        }
+
+        itemBtn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          this.closeContextMenu();
+          if (!entry.disabled) {
+            entry.action();
+          }
+        });
+
+        menuEl.appendChild(itemBtn);
+      }
+    });
+
+    document.body.appendChild(menuEl);
+
+    // Position and clamp within viewport
+    const rect = menuEl.getBoundingClientRect();
+    const pad = 8;
+    let left = x;
+    let top = y;
+
+    if (left + rect.width > window.innerWidth - pad) {
+      left = Math.max(pad, window.innerWidth - rect.width - pad);
+    }
+    if (top + rect.height > window.innerHeight - pad) {
+      top = Math.max(pad, window.innerHeight - rect.height - pad);
+    }
+
+    menuEl.style.left = `${left}px`;
+    menuEl.style.top = `${top}px`;
+    menuEl.focus();
+  }
+
+  closeContextMenu(): void {
+    const existing = document.getElementById("app-context-menu");
+    if (existing) {
+      existing.remove();
+    }
   }
 
   // --- Workspaces & Sub-tabs Navigation ---
@@ -497,7 +849,7 @@ export class CitariumApp {
         else if (status === "Annotated") badgeClass += " badge-annotated";
 
         return `
-          <li class="citation-item ${isSelected ? "selected" : ""}" onclick="app.selectCitation('${c.id}')">
+          <li class="citation-item ${isSelected ? "selected" : ""}" data-citation-id="${c.id}" onclick="app.selectCitation('${c.id}')">
             <div class="citation-item-author-year">${this.escapeHtml(authorYear)}</div>
             <div class="citation-item-title">${this.escapeHtml(title)}</div>
             <div class="citation-item-meta">
@@ -809,7 +1161,7 @@ export class CitariumApp {
     tbody.innerHTML = quotes
       .map((q) => {
         return `
-          <tr>
+          <tr data-quote-id="${q.id}">
             <td>"${this.escapeHtml(q.quoteText)}"</td>
             <td><span class="badge">${this.escapeHtml(q.getLocationDisplay() || "-")}</span></td>
             <td>${this.escapeHtml(q.notes || "-")}</td>

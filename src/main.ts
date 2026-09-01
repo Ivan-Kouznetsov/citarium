@@ -107,9 +107,15 @@ let isClosingAllowed = false;
 
 const hostPlatform = platform.platform() === "darwin" ? "mac" : platform.platform() === "win32" ? "windows" : "linux";
 
+const isDebugMode =
+  process.argv.includes("--debug") ||
+  process.argv.includes("-d") ||
+  process.env.CITARIUM_DEBUG === "1" ||
+  process.env.DEBUG === "1";
+
 const mainWindow = new BrowserWindow({
   title: "Citarium",
-  url: `views://mainview/index.html?platform=${hostPlatform}`,
+  url: `views://mainview/index.html?platform=${hostPlatform}${isDebugMode ? "&debug=1" : ""}`,
   rpc: citariumRPC,
   frame: {
     width: 1260,

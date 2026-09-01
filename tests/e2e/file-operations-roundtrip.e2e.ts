@@ -12,7 +12,7 @@ test.describe("File Operations, In-Depth UI Editing, and Full Roundtrip Verifica
 
   test("Create New File: Build project from scratch, add citations & ideas, save to file, and verify on reopen", async ({ page }) => {
     // 1. Start fresh project
-    await page.evaluate(() => window.app?.newProject());
+    await page.evaluate(() => window.app.newProject());
     await expect(page).toHaveTitle(/^New Writing Project — Citarium$/);
 
     // 2. Add first citation
@@ -56,7 +56,7 @@ test.describe("File Operations, In-Depth UI Editing, and Full Roundtrip Verifica
       } as FileSystemFileHandle);
     });
 
-    await page.evaluate(() => window.app?.saveProjectToFile());
+    await page.evaluate(() => window.app.saveProjectToFile());
     savedJson = (await page.evaluate(() => window.__savedNewFileJson)) ?? "";
     expect(savedJson).toBeTruthy();
 
@@ -73,7 +73,7 @@ test.describe("File Operations, In-Depth UI Editing, and Full Roundtrip Verifica
 
     try {
       // Reset workspace
-      await page.evaluate(() => window.app?.newProject());
+      await page.evaluate(() => window.app.newProject());
       await expect(page.locator("#citation-list .citation-item")).toHaveCount(0);
 
       // Open saved file via file chooser (fallback HTML input)
@@ -81,7 +81,7 @@ test.describe("File Operations, In-Depth UI Editing, and Full Roundtrip Verifica
         delete window.showOpenFilePicker;
       });
       const fileChooserPromise = page.waitForEvent("filechooser");
-      await page.evaluate(() => window.app?.openProjectFileDialog());
+      await page.evaluate(() => window.app.openProjectFileDialog());
       const fileChooser = await fileChooserPromise;
       await fileChooser.setFiles(tempFilePath);
 
@@ -141,7 +141,7 @@ test.describe("File Operations, In-Depth UI Editing, and Full Roundtrip Verifica
     }, { exampleJson: originalContent, filename: "feline_behavior_annotated_bibliography.json" });
 
     // 1. OPEN file using app.openProjectFileDialog()
-    await page.evaluate(() => window.app?.openProjectFileDialog());
+    await page.evaluate(() => window.app.openProjectFileDialog());
 
     // Verify title loaded in UI
     await expect(page.locator("#form-title")).toHaveValue(originalFirstTitle);
@@ -153,7 +153,7 @@ test.describe("File Operations, In-Depth UI Editing, and Full Roundtrip Verifica
     await expect(page).toHaveTitle(/• \(unsaved\)/);
 
     // 3. SAVE via File Menu / app.saveProjectToFile()
-    await page.evaluate(() => window.app?.saveProjectToFile());
+    await page.evaluate(() => window.app.saveProjectToFile());
 
     // 4. VERIFY: The opened file handle was written to and contains the updated title with " 1"
     const savedToOpenedFile = await page.evaluate(() => window.__savedToOpenedFile);
@@ -171,7 +171,7 @@ test.describe("File Operations, In-Depth UI Editing, and Full Roundtrip Verifica
       delete window.showOpenFilePicker;
     });
     const fileChooserPromise = page.waitForEvent("filechooser");
-    await page.evaluate(() => window.app?.openProjectFileDialog());
+    await page.evaluate(() => window.app.openProjectFileDialog());
     const fileChooser = await fileChooserPromise;
     await fileChooser.setFiles(EXAMPLE_FILE);
 
@@ -227,7 +227,7 @@ test.describe("File Operations, In-Depth UI Editing, and Full Roundtrip Verifica
       } as FileSystemFileHandle);
     });
 
-    await page.evaluate(() => window.app?.saveProjectToFile());
+    await page.evaluate(() => window.app.saveProjectToFile());
 
     capturedSavedJson = (await page.evaluate(() => window.__savedJsonData)) ?? "";
     expect(capturedSavedJson).toBeTruthy();
@@ -244,7 +244,7 @@ test.describe("File Operations, In-Depth UI Editing, and Full Roundtrip Verifica
 
     try {
       // Clear project first
-      await page.evaluate(() => window.app?.newProject());
+      await page.evaluate(() => window.app.newProject());
       await expect(page).toHaveTitle(/^New Writing Project — Citarium$/);
 
       // Reload the saved file
@@ -252,7 +252,7 @@ test.describe("File Operations, In-Depth UI Editing, and Full Roundtrip Verifica
         delete window.showOpenFilePicker;
       });
       const reloadChooserPromise = page.waitForEvent("filechooser");
-      await page.evaluate(() => window.app?.openProjectFileDialog());
+      await page.evaluate(() => window.app.openProjectFileDialog());
       const reloadChooser = await reloadChooserPromise;
       await reloadChooser.setFiles(tempSavedPath);
 

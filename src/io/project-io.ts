@@ -3,7 +3,6 @@
  */
 import { existsSync, mkdirSync, renameSync, unlinkSync } from "fs";
 import { dirname, resolve, join } from "path";
-import { tmpdir } from "os";
 import { Project } from "../models/project";
 
 export class ProjectIOError extends Error {

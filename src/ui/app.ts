@@ -1,7 +1,7 @@
 /**
  * Citarium Web UI Application Controller (TypeScript)
  */
-import { Project, Citation, Author, Quote, CITATION_STATUSES } from "../models";
+import { Project, Citation, Author, Quote } from "../models";
 import { APA7Formatter } from "../formatters/apa7";
 import { BibTeXFormatter } from "../formatters/bibtex";
 import { BibTeXParser } from "../io/bibtex-parser";

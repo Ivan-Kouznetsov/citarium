@@ -2,7 +2,6 @@
  * BibTeX exporter and formatter.
  */
 import { Citation } from "../models/citation";
-import { Author } from "../models/author";
 
 export class BibTeXFormatter {
   static readonly TYPE_MAP: Record<string, string> = {

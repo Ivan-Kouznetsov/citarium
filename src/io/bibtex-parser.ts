@@ -62,19 +62,16 @@ export class BibTeXParser {
         entryStartPattern.lastIndex = endPos + 1;
       }
 
-      // Extract citekey and field body
+      // Extract field body
       const firstComma = content.indexOf(",");
-      let citekey: string;
       let body: string;
       if (firstComma !== -1) {
-        citekey = content.slice(0, firstComma).trim();
         body = content.slice(firstComma + 1);
       } else {
-        citekey = content.trim();
         body = "";
       }
 
-      const citation = BibTeXParser._parseEntryBody(entryTypeRaw, citekey, body);
+      const citation = BibTeXParser._parseEntryBody(entryTypeRaw, body);
       if (citation) {
         citations.push(citation);
       }
@@ -85,7 +82,6 @@ export class BibTeXParser {
 
   private static _parseEntryBody(
     entryTypeRaw: string,
-    citekey: string,
     body: string
   ): Citation | null {
     const fields = BibTeXParser._extractFields(body);

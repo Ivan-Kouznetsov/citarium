@@ -1,12 +1,8 @@
 import { BrowserWindow, BrowserView, ApplicationMenu, Utils } from "electrobun/main";
-import { join } from "path";
-import { existsSync, readFileSync } from "fs";
 import { loadProject, saveProject, loadSettings, saveSettings } from "./io";
 import { Project } from "./models";
 import type { CitariumRPC } from "./rpc-types";
 import platform from "os";
-
-const ROOT_DIR = process.cwd();
 
 const citariumRPC = BrowserView.defineRPC<CitariumRPC>({
   maxRequestTime: 300000,
@@ -201,19 +197,19 @@ ApplicationMenu.on("application-menu-clicked", (event: unknown) => {
   if (!action) return;
 
   const actionToJsMap: Record<string, string> = {
-    "new-project": "window.app?.newProject()",
-    "open-project": "window.app?.openProjectFileDialog()",
-    "save-project": "window.app?.saveProjectToFile()",
-    "load-example": "window.app?.loadExampleProject()",
-    "import-bibtex": "window.app?.openImportDialog()",
-    "export-markdown": "window.app?.exportMarkdown()",
-    "export-text": "window.app?.exportPlainText()",
-    "export-bibtex": "window.app?.exportBibtex()",
-    "view-references": "window.app?.selectWorkspace('references')",
-    "view-bibliography": "window.app?.selectWorkspace('bibliography')",
-    "view-overview": "window.app?.selectWorkspace('overview')",
-    "toggle-theme": "window.app?.toggleTheme()",
-    "open-guide": "window.app?.openGuideDialog()",
+    "new-project": "window.app.newProject()",
+    "open-project": "window.app.openProjectFileDialog()",
+    "save-project": "window.app.saveProjectToFile()",
+    "load-example": "window.app.loadExampleProject()",
+    "import-bibtex": "window.app.openImportDialog()",
+    "export-markdown": "window.app.exportMarkdown()",
+    "export-text": "window.app.exportPlainText()",
+    "export-bibtex": "window.app.exportBibtex()",
+    "view-references": "window.app.selectWorkspace('references')",
+    "view-bibliography": "window.app.selectWorkspace('bibliography')",
+    "view-overview": "window.app.selectWorkspace('overview')",
+    "toggle-theme": "window.app.toggleTheme()",
+    "open-guide": "window.app.openGuideDialog()",
   };
 
   const js = actionToJsMap[action];

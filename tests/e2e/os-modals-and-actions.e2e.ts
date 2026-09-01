@@ -1,4 +1,4 @@
-import { test, expect, getOsModifierKey, isHostPlatform } from "./fixtures/platform-helpers";
+import { test, expect, getOsModifierKey } from "./fixtures/platform-helpers";
 import { resolve } from "path";
 
 const EXAMPLE_FILE = resolve(process.cwd(), "examples/feline_behavior_annotated_bibliography.json");
@@ -17,7 +17,7 @@ test.describe("OS Modals, File Choosers, Native Dialogs, and OS Actions", () => 
 
     // Listen for file chooser event
     const fileChooserPromise = page.waitForEvent("filechooser");
-    await page.evaluate(() => window.app?.openProjectFileDialog());
+    await page.evaluate(() => window.app.openProjectFileDialog());
     const fileChooser = await fileChooserPromise;
 
     // Provide example JSON file
@@ -49,11 +49,11 @@ test.describe("OS Modals, File Choosers, Native Dialogs, and OS Actions", () => 
     });
 
     // Load example project
-    await page.evaluate(() => window.app?.loadExampleProject());
+    await page.evaluate(() => window.app.loadExampleProject());
     await expect(page).toHaveTitle(/Domestic Feline/);
 
     // Trigger Markdown Export
-    await page.evaluate(() => window.app?.exportMarkdown());
+    await page.evaluate(() => window.app.exportMarkdown());
 
     const saveCall = await page.evaluate(() => window.__lastSavePickerCall);
     expect(saveCall).toBeTruthy();
@@ -71,12 +71,12 @@ test.describe("OS Modals, File Choosers, Native Dialogs, and OS Actions", () => 
     });
 
     // Load example project
-    await page.evaluate(() => window.app?.loadExampleProject());
+    await page.evaluate(() => window.app.loadExampleProject());
     await expect(page).toHaveTitle(/Domestic Feline/);
 
     // Trigger export and wait for download event
     const downloadPromise = page.waitForEvent("download");
-    await page.evaluate(() => window.app?.exportBibtex());
+    await page.evaluate(() => window.app.exportBibtex());
     const download = await downloadPromise;
 
     expect(download.suggestedFilename()).toContain(".bib");
@@ -96,7 +96,7 @@ test.describe("OS Modals, File Choosers, Native Dialogs, and OS Actions", () => 
       await dialog.dismiss();
     });
 
-    await page.evaluate(() => window.app?.newProject());
+    await page.evaluate(() => window.app.newProject());
     // Form title should still be retained because dialog was cancelled
     await expect(page.locator("#form-title")).toHaveValue("Unsaved Scratch Work");
 
@@ -106,7 +106,7 @@ test.describe("OS Modals, File Choosers, Native Dialogs, and OS Actions", () => 
       await dialog.accept();
     });
 
-    await page.evaluate(() => window.app?.newProject());
+    await page.evaluate(() => window.app.newProject());
     // After accepting, project resets and title is cleared
     await expect(page.locator("#form-title")).toHaveValue("");
     await expect(page).toHaveTitle(/^New Writing Project — Citarium$/);
@@ -132,7 +132,7 @@ test.describe("OS Modals, File Choosers, Native Dialogs, and OS Actions", () => 
     await context.grantPermissions(["clipboard-read", "clipboard-write"]);
 
     // Load example project
-    await page.evaluate(() => window.app?.loadExampleProject());
+    await page.evaluate(() => window.app.loadExampleProject());
     await expect(page).toHaveTitle(/Domestic Feline/);
 
     // Test Copy Reference button

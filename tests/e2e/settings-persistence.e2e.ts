@@ -14,12 +14,12 @@ test.describe("Settings Persistence, Last Opened File Auto-Load, and Theme Confi
     await expect(html).toHaveAttribute("data-theme", "light");
 
     // Toggle theme to dark
-    await page.evaluate(() => window.app?.toggleTheme());
+    await page.evaluate(() => window.app.toggleTheme());
     await expect(html).toHaveAttribute("data-theme", "dark");
 
     // Re-trigger loadInitialSettings with simulated RPC response returning dark theme
     await page.evaluate(async () => {
-      window.app?.applyTheme("dark");
+      window.app.applyTheme("dark");
     });
     await expect(html).toHaveAttribute("data-theme", "dark");
   });
@@ -60,12 +60,10 @@ test.describe("Settings Persistence, Last Opened File Auto-Load, and Theme Confi
       // Mock electrobun RPC to return sampleProjectPath as lastOpenedFile and loadProject
       await page.evaluate(
         async ({ filePath, projectData }) => {
-          if (window.app) {
-            const projectCtor = window.app.project.constructor as unknown as { fromDict(d: unknown): NonNullable<typeof window.app>["project"] };
-            window.app.project = projectCtor.fromDict(projectData);
-            window.app.currentFilepath = filePath;
-            window.app.refreshAll();
-          }
+          const projectCtor = window.app.project.constructor as unknown as { fromDict(d: unknown): typeof window.app.project };
+          window.app.project = projectCtor.fromDict(projectData);
+          window.app.currentFilepath = filePath;
+          window.app.refreshAll();
         },
         { filePath: sampleProjectPath, projectData: sampleProjectData }
       );
@@ -97,7 +95,7 @@ test.describe("Settings Persistence, Last Opened File Auto-Load, and Theme Confi
 
     // Simulate missing file warning on startup via showWarningDialog
     await page.evaluate(async (missingPath) => {
-      await window.app?.showWarningDialog(
+      await window.app.showWarningDialog(
         `Could not find last opened project:\n"${missingPath}"\n\nA new project has been opened.`
       );
     }, nonExistentPath);
@@ -112,11 +110,11 @@ test.describe("Settings Persistence, Last Opened File Auto-Load, and Theme Confi
   test("Saving a newly created project updates currentFilepath and persists lastOpenedFile in settings", async ({ page }) => {
     // 1. Create a new project
     await page.evaluate(() => {
-      window.app?.newProject();
+      window.app.newProject();
     });
 
     // Verify currentFilepath is initially null
-    const initialPath = await page.evaluate(() => window.app?.currentFilepath);
+    const initialPath = await page.evaluate(() => window.app.currentFilepath);
     expect(initialPath).toBeNull();
 
     // 2. Mock showSaveFilePicker to simulate saving a new file
@@ -144,11 +142,11 @@ test.describe("Settings Persistence, Last Opened File Auto-Load, and Theme Confi
 
     // 3. User saves the project
     await page.evaluate(async () => {
-      await window.app?.saveProjectToFile();
+      await window.app.saveProjectToFile();
     });
 
     // 4. Assert that app.currentFilepath has been updated with the saved filename/path
-    const updatedFilepath = await page.evaluate(() => window.app?.currentFilepath);
+    const updatedFilepath = await page.evaluate(() => window.app.currentFilepath);
     expect(updatedFilepath).not.toBeNull();
     expect(updatedFilepath).toBe("saved_new_project.json");
 

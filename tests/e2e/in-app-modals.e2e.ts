@@ -46,7 +46,7 @@ test.describe("In-App Modals and Interactive Dialogs", () => {
 
   test("BibTeX Import Modal: Parse preview and import citations", async ({ page }) => {
     // Open import modal
-    await page.evaluate(() => window.app?.openImportDialog());
+    await page.evaluate(() => window.app.openImportDialog());
     const modal = page.locator("#modal-import");
     await expect(modal).toHaveClass(/active/);
 
@@ -101,7 +101,7 @@ test.describe("In-App Modals and Interactive Dialogs", () => {
   });
 
   test("APA 7 Quick Guide Modal: Opens and displays reference rules", async ({ page }) => {
-    await page.evaluate(() => window.app?.openGuideDialog());
+    await page.evaluate(() => window.app.openGuideDialog());
     const modal = page.locator("#modal-guide");
     await expect(modal).toHaveClass(/active/);
     await expect(modal.locator(".modal-title")).toHaveText("APA 7th Edition Quick Reference Guide");

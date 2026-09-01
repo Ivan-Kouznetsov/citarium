@@ -1,4 +1,4 @@
-import { join, resolve } from "path";
+import { join } from "path";
 import { readFileSync, existsSync } from "fs";
 
 const ROOT = process.cwd();

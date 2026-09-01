@@ -3,7 +3,6 @@
  */
 import { BaseFormatter } from "./base";
 import { APA7Formatter } from "./apa7";
-import { BibTeXFormatter } from "./bibtex";
 
 export { BaseFormatter } from "./base";
 export { APA7Formatter } from "./apa7";

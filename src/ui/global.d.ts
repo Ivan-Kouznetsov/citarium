@@ -40,7 +40,7 @@ declare global {
   interface Window {
     __electrobunWebviewId?: number | string;
     electrobun?: Electroview<ReturnType<typeof Electroview.defineRPC<CitariumRPC>>>;
-    app?: CitariumApp;
+    app: CitariumApp;
     showOpenFilePicker?(options?: OpenFilePickerOptions): Promise<FileSystemFileHandle[]>;
     showSaveFilePicker?(options?: SaveFilePickerOptions): Promise<FileSystemFileHandle>;
     _capturedSavedSettings?: Partial<CitariumSettings> | null;

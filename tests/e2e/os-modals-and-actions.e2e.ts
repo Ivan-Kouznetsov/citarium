@@ -418,4 +418,150 @@ test.describe("OS Modals, File Choosers, Native Dialogs, and OS Actions", () => 
     await expect(page.locator("#form-title")).toHaveValue("Aborted Save As Close Test");
     await expect(page).toHaveTitle(/• \(unsaved\)/);
   });
+
+  test("OS Message Box: Desktop confirm on newProject() prompts user and respects Cancel / OK", async ({ page }) => {
+    await page.evaluate(() => {
+      window.__messageBoxOpts = null;
+      window.__electrobunWebviewId = 1;
+      let mockResponse = 1; // Index 1: Cancel
+      window.electrobun = {
+        rpc: {
+          request: {
+            showMessageBox: async (opts: any) => {
+              window.__messageBoxOpts = opts;
+              return { success: true, response: mockResponse };
+            },
+            saveSettings: async () => ({ success: true }),
+          },
+        },
+      } as any;
+      (window as any).__setMockResponse = (val: number) => {
+        mockResponse = val;
+      };
+    });
+
+    // Make project dirty
+    await page.locator(".sidebar-panel button", { hasText: "+ Add" }).click();
+    await page.locator("#form-title").fill("Dirty Project For OS MsgBox");
+    await expect(page).toHaveTitle(/• \(unsaved\)/);
+
+    // 1. User selects Cancel (response = 1)
+    (await page.evaluate(async () => {
+      (window as any).__setMockResponse(1); // Cancel
+      await window.app.newProject();
+    }));
+
+    let msgBoxOpts = await page.evaluate(() => window.__messageBoxOpts as any);
+    expect(msgBoxOpts).toBeTruthy();
+    expect(msgBoxOpts.buttons).toEqual(["OK", "Cancel"]);
+    expect(msgBoxOpts.type).toBe("question");
+    expect(msgBoxOpts.message).toContain("You have unsaved changes");
+    await expect(page.locator("#form-title")).toHaveValue("Dirty Project For OS MsgBox");
+
+    // 2. User selects OK (response = 0)
+    (await page.evaluate(async () => {
+      (window as any).__setMockResponse(0); // OK
+      await window.app.newProject();
+    }));
+
+    await expect(page.locator("#form-title")).toHaveValue("");
+    await expect(page).toHaveTitle(/^New Writing Project — Citarium$/);
+  });
+
+  test("OS Message Box: Desktop confirm on deleteCitation() prompts user and respects Cancel / OK", async ({ page }) => {
+    // Load example project
+    await page.evaluate(() => window.app.loadExampleProject());
+    await expect(page).toHaveTitle(/Domestic Feline/);
+
+    await page.evaluate(() => {
+      window.__messageBoxOpts = null;
+      window.__electrobunWebviewId = 1;
+      let mockResponse = 1; // Index 1: Cancel
+      window.electrobun = {
+        rpc: {
+          request: {
+            showMessageBox: async (opts: any) => {
+              window.__messageBoxOpts = opts;
+              return { success: true, response: mockResponse };
+            },
+          },
+        },
+      } as any;
+      (window as any).__setMockResponse = (val: number) => {
+        mockResponse = val;
+      };
+    });
+
+    const initialCount = await page.locator("#citation-list .citation-item").count();
+    expect(initialCount).toBeGreaterThan(0);
+
+    // 1. User clicks Delete -> Cancel
+    await page.evaluate(async () => {
+      (window as any).__setMockResponse(1); // Cancel
+      await window.app.deleteCitation();
+    });
+
+    let msgBoxOpts = await page.evaluate(() => window.__messageBoxOpts as any);
+    expect(msgBoxOpts).toBeTruthy();
+    expect(msgBoxOpts.buttons).toEqual(["OK", "Cancel"]);
+    expect(msgBoxOpts.type).toBe("question");
+    expect(msgBoxOpts.message).toContain("Are you sure you want to permanently delete");
+
+    const afterCancelCount = await page.locator("#citation-list .citation-item").count();
+    expect(afterCancelCount).toBe(initialCount);
+
+    // 2. User clicks Delete -> OK
+    await page.evaluate(async () => {
+      (window as any).__setMockResponse(0); // OK
+      await window.app.deleteCitation();
+    });
+
+    const afterOkCount = await page.locator("#citation-list .citation-item").count();
+    expect(afterOkCount).toBe(initialCount - 1);
+  });
+
+  test("OS Message Box: showWarningDialog, showErrorDialog, and showInfoDialog invoke native showMessageBox", async ({ page }) => {
+    await page.evaluate(() => {
+      window.__calls = [];
+      window.__electrobunWebviewId = 1;
+      window.electrobun = {
+        rpc: {
+          request: {
+            showMessageBox: async (opts: any) => {
+              (window as any).__calls.push(opts);
+              return { success: true, response: 0 };
+            },
+          },
+        },
+      } as any;
+    });
+
+    await page.evaluate(async () => {
+      await window.app.showWarningDialog("Warning text", "Warning Title");
+      await window.app.showErrorDialog("Error text", "Error Title");
+      await window.app.showInfoDialog("Info text", "Info Title");
+    });
+
+    const calls = await page.evaluate(() => (window as any).__calls);
+    expect(calls.length).toBe(3);
+    expect(calls[0]).toEqual({
+      type: "warning",
+      title: "Warning Title",
+      message: "Warning text",
+      buttons: ["OK"],
+    });
+    expect(calls[1]).toEqual({
+      type: "error",
+      title: "Error Title",
+      message: "Error text",
+      buttons: ["OK"],
+    });
+    expect(calls[2]).toEqual({
+      type: "info",
+      title: "Info Title",
+      message: "Info text",
+      buttons: ["OK"],
+    });
+  });
 });
+

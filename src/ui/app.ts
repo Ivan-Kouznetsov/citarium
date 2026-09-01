@@ -123,19 +123,76 @@ export class CitariumApp {
     }
   }
 
-  async showWarningDialog(message: string): Promise<void> {
+  async showWarningDialog(message: string, title: string = "Citarium"): Promise<void> {
     if (this.isDesktop && this.electrobun?.rpc?.request?.showMessageBox) {
       try {
         const res = await this.electrobun.rpc.request.showMessageBox({
           type: "warning",
-          title: "Citarium",
+          title,
           message,
           buttons: ["OK"],
         });
         if (res?.success) return;
-      } catch {}
+      } catch (err) {
+        console.warn("showMessageBox warning failed:", err);
+      }
     }
     window.alert(message);
+  }
+
+  async showErrorDialog(message: string, title: string = "Citarium"): Promise<void> {
+    if (this.isDesktop && this.electrobun?.rpc?.request?.showMessageBox) {
+      try {
+        const res = await this.electrobun.rpc.request.showMessageBox({
+          type: "error",
+          title,
+          message,
+          buttons: ["OK"],
+        });
+        if (res?.success) return;
+      } catch (err) {
+        console.warn("showMessageBox error failed:", err);
+      }
+    }
+    window.alert(message);
+  }
+
+  async showInfoDialog(message: string, title: string = "Citarium"): Promise<void> {
+    if (this.isDesktop && this.electrobun?.rpc?.request?.showMessageBox) {
+      try {
+        const res = await this.electrobun.rpc.request.showMessageBox({
+          type: "info",
+          title,
+          message,
+          buttons: ["OK"],
+        });
+        if (res?.success) return;
+      } catch (err) {
+        console.warn("showMessageBox info failed:", err);
+      }
+    }
+    window.alert(message);
+  }
+
+  async showConfirmDialog(message: string, title: string = "Citarium"): Promise<boolean> {
+    if (this.isDesktop && this.electrobun?.rpc?.request?.showMessageBox) {
+      try {
+        const res = await this.electrobun.rpc.request.showMessageBox({
+          type: "question",
+          title,
+          message,
+          buttons: ["OK", "Cancel"],
+          defaultId: 0,
+          cancelId: 1,
+        });
+        if (res?.success && typeof res.response === "number") {
+          return res.response === 0;
+        }
+      } catch (err) {
+        console.warn("showMessageBox confirm failed:", err);
+      }
+    }
+    return window.confirm(message);
   }
 
   showWarningBanner(message: string): void {
@@ -410,10 +467,11 @@ export class CitariumApp {
     this.refreshAll();
   }
 
-  deleteCitation(): void {
+  async deleteCitation(): Promise<void> {
     const cur = this.getSelectedCitation();
     if (!cur) return;
-    if (confirm(`Are you sure you want to permanently delete '${cur.title}'?`)) {
+    const confirmed = await this.showConfirmDialog(`Are you sure you want to permanently delete '${cur.title}'?`);
+    if (confirmed) {
       this.project.removeCitation(cur.id);
       this.isModified = true;
       this.selectedCitationId = null;
@@ -1061,9 +1119,12 @@ export class CitariumApp {
   }
 
   // --- File & Project Operations ---
-  newProject(): void {
-    if (this.isModified && !confirm("You have unsaved changes. Create new project anyway?")) {
-      return;
+  async newProject(): Promise<void> {
+    if (this.isModified) {
+      const confirmed = await this.showConfirmDialog("You have unsaved changes. Create new project anyway?");
+      if (!confirmed) {
+        return;
+      }
     }
     this.dismissWarningBanner();
     this.project = new Project({

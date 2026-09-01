@@ -89,6 +89,9 @@ export class CitariumApp {
 
     // Asynchronously load persistent settings from local JSON (theme & last opened file)
     this.loadInitialSettings();
+
+    // Native In-App Menubar & Dropdowns (Active on Linux)
+    this.setupMenubarHover();
   }
 
   async loadInitialSettings(): Promise<void> {
@@ -226,8 +229,37 @@ export class CitariumApp {
     this.applyTheme(nextTheme, true);
   }
 
+  isAnyMenuOpen: boolean = false;
 
-  // Native Desktop Dropdown Menus
+  // Native In-App Menubar & Dropdown Actions
+  toggleMenu(menuName: string, e?: Event): void {
+    if (e) e.stopPropagation();
+    const dropdown = document.getElementById(`dropdown-${menuName}`);
+    const btn = document.getElementById(`menubar-btn-${menuName}`);
+    const isCurrentlyActive = dropdown?.classList.contains("active");
+
+    this.closeAllMenus();
+
+    if (!isCurrentlyActive && dropdown && btn) {
+      dropdown.classList.add("active");
+      btn.classList.add("active");
+      btn.setAttribute("aria-expanded", "true");
+      this.isAnyMenuOpen = true;
+    }
+  }
+
+  openMenu(menuName: string): void {
+    this.closeAllMenus();
+    const dropdown = document.getElementById(`dropdown-${menuName}`);
+    const btn = document.getElementById(`menubar-btn-${menuName}`);
+    if (dropdown && btn) {
+      dropdown.classList.add("active");
+      btn.classList.add("active");
+      btn.setAttribute("aria-expanded", "true");
+      this.isAnyMenuOpen = true;
+    }
+  }
+
   toggleDropdownMenu(menuId: string, e: Event): void {
     e.stopPropagation();
     const menuEl = document.getElementById(menuId);
@@ -241,6 +273,14 @@ export class CitariumApp {
   }
 
   closeAllMenus(): void {
+    this.isAnyMenuOpen = false;
+    document.querySelectorAll(".menubar-dropdown").forEach((m) => {
+      m.classList.remove("active");
+    });
+    document.querySelectorAll(".menubar-btn").forEach((b) => {
+      b.classList.remove("active");
+      b.setAttribute("aria-expanded", "false");
+    });
     document.querySelectorAll(".desktop-dropdown-menu").forEach((m) => {
       m.classList.remove("active");
     });
@@ -249,20 +289,53 @@ export class CitariumApp {
     });
   }
 
-  // Native window management is now handled by Electrobun window frame
+  setupMenubarHover(): void {
+    const menuNames = ["file", "edit", "view", "help"];
+    menuNames.forEach((name) => {
+      const itemEl = document.getElementById(`menu-item-${name}`);
+      if (itemEl) {
+        itemEl.addEventListener("mouseenter", () => {
+          if (this.isAnyMenuOpen) {
+            this.openMenu(name);
+          }
+        });
+      }
+    });
+  }
+
+  triggerEditAction(action: "undo" | "redo" | "cut" | "copy" | "paste" | "selectAll"): void {
+    this.closeAllMenus();
+    try {
+      if (action === "selectAll") {
+        const active = document.activeElement as HTMLInputElement | HTMLTextAreaElement | null;
+        if (active && typeof active.select === "function") {
+          active.select();
+          return;
+        }
+      }
+      document.execCommand(action);
+    } catch (err) {
+      console.warn(`[Citarium] Edit action ${action} failed:`, err);
+    }
+  }
 
   setupKeyboardShortcuts(): void {
     window.addEventListener("keydown", (e) => {
       const isMac = this.currentPlatform === "mac";
       const modKey = isMac ? e.metaKey : e.ctrlKey;
 
-      if (modKey && e.key === "n") {
+      if (e.key === "Escape") {
+        this.closeAllMenus();
+      } else if (modKey && e.key.toLowerCase() === "t") {
+        e.preventDefault();
+        this.toggleTheme();
+      } else if (modKey && e.key.toLowerCase() === "n") {
         e.preventDefault();
         this.newProject();
-      } else if (modKey && e.key === "o") {
+      } else if (modKey && e.key.toLowerCase() === "o") {
         e.preventDefault();
         this.openProjectFileDialog();
-      } else if (modKey && e.key === "s") {
+      } else if (modKey && e.key.toLowerCase() === "s") {
         e.preventDefault();
         this.saveProjectToFile();
       } else if (modKey && e.key === "1") {
@@ -289,7 +362,7 @@ export class CitariumApp {
   setupGlobalClick(): void {
     window.addEventListener("click", (e) => {
       const target = e.target as HTMLElement;
-      if (!target.closest(".menu-item-container")) {
+      if (!target.closest(".menubar-item") && !target.closest(".menu-item-container")) {
         this.closeAllMenus();
       }
     });

@@ -28,8 +28,62 @@
 
 <body>
 
-  <!-- Top App Header / Window Toolbar with Native Tabs -->
+  <!-- Top App Header / Window Toolbar with Native Tabs & Linux In-App Menubar -->
   <header class="app-header">
+    <!-- In-Webview Native Application Menubar (Active on Linux) -->
+    <nav class="app-menubar" id="app-menubar" role="menubar">
+      <!-- File Menu -->
+      <div class="menubar-item" id="menu-item-file">
+        <button class="menubar-btn" id="menubar-btn-file" aria-haspopup="true" aria-expanded="false" onclick="app.toggleMenu('file', event)">File</button>
+        <div class="menubar-dropdown" id="dropdown-file" role="menu">
+          <button class="menu-row" onclick="app.newProject()"><span class="menu-label">New Project</span><span class="menu-shortcut">Ctrl+N</span></button>
+          <button class="menu-row" onclick="app.openProjectFileDialog()"><span class="menu-label">Open Project...</span><span class="menu-shortcut">Ctrl+O</span></button>
+          <button class="menu-row" onclick="app.saveProjectToFile()"><span class="menu-label">Save Project</span><span class="menu-shortcut">Ctrl+S</span></button>
+          <div class="menu-divider"></div>
+          <button class="menu-row" onclick="app.openImportDialog()"><span class="menu-label">Import BibTeX (.bib)...</span></button>
+          <button class="menu-row" onclick="app.exportMarkdown()"><span class="menu-label">Export Markdown (.md)</span></button>
+          <button class="menu-row" onclick="app.exportPlainText()"><span class="menu-label">Export Plain Text (.txt)</span></button>
+          <button class="menu-row" onclick="app.exportBibtex()"><span class="menu-label">Export BibTeX (.bib)</span></button>
+          <div class="menu-divider"></div>
+          <button class="menu-row" onclick="app.handleAppClose()"><span class="menu-label">Close / Quit</span><span class="menu-shortcut">Ctrl+Q</span></button>
+        </div>
+      </div>
+
+      <!-- Edit Menu -->
+      <div class="menubar-item" id="menu-item-edit">
+        <button class="menubar-btn" id="menubar-btn-edit" aria-haspopup="true" aria-expanded="false" onclick="app.toggleMenu('edit', event)">Edit</button>
+        <div class="menubar-dropdown" id="dropdown-edit" role="menu">
+          <button class="menu-row" onclick="app.triggerEditAction('undo')"><span class="menu-label">Undo</span><span class="menu-shortcut">Ctrl+Z</span></button>
+          <button class="menu-row" onclick="app.triggerEditAction('redo')"><span class="menu-label">Redo</span><span class="menu-shortcut">Ctrl+Y</span></button>
+          <div class="menu-divider"></div>
+          <button class="menu-row" onclick="app.triggerEditAction('cut')"><span class="menu-label">Cut</span><span class="menu-shortcut">Ctrl+X</span></button>
+          <button class="menu-row" onclick="app.triggerEditAction('copy')"><span class="menu-label">Copy</span><span class="menu-shortcut">Ctrl+C</span></button>
+          <button class="menu-row" onclick="app.triggerEditAction('paste')"><span class="menu-label">Paste</span><span class="menu-shortcut">Ctrl+V</span></button>
+          <button class="menu-row" onclick="app.triggerEditAction('selectAll')"><span class="menu-label">Select All</span><span class="menu-shortcut">Ctrl+A</span></button>
+        </div>
+      </div>
+
+      <!-- View Menu -->
+      <div class="menubar-item" id="menu-item-view">
+        <button class="menubar-btn" id="menubar-btn-view" aria-haspopup="true" aria-expanded="false" onclick="app.toggleMenu('view', event)">View</button>
+        <div class="menubar-dropdown" id="dropdown-view" role="menu">
+          <button class="menu-row" onclick="app.selectWorkspace('references')"><span class="menu-label">References</span><span class="menu-shortcut">Ctrl+1</span></button>
+          <button class="menu-row" onclick="app.selectWorkspace('bibliography')"><span class="menu-label">Bibliography</span><span class="menu-shortcut">Ctrl+2</span></button>
+          <button class="menu-row" onclick="app.selectWorkspace('overview')"><span class="menu-label">Overview</span><span class="menu-shortcut">Ctrl+3</span></button>
+          <div class="menu-divider"></div>
+          <button class="menu-row" onclick="app.toggleTheme()"><span class="menu-label">Toggle Theme (Light / Dark)</span><span class="menu-shortcut">Ctrl+T</span></button>
+        </div>
+      </div>
+
+      <!-- Help Menu -->
+      <div class="menubar-item" id="menu-item-help">
+        <button class="menubar-btn" id="menubar-btn-help" aria-haspopup="true" aria-expanded="false" onclick="app.toggleMenu('help', event)">Help</button>
+        <div class="menubar-dropdown" id="dropdown-help" role="menu">
+          <button class="menu-row" onclick="app.openGuideDialog()"><span class="menu-label">APA 7th Edition Guide</span></button>
+        </div>
+      </div>
+    </nav>
+
     <!-- Workspace Tabs (Native Segmented Control) -->
     <nav class="workspace-tabs" role="tablist">
       <button id="tab-btn-refs" class="tab-btn active" role="tab" aria-selected="true"

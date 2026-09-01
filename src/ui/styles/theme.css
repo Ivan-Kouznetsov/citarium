@@ -91,6 +91,108 @@ body {
   flex-shrink: 0;
   z-index: 50;
   -webkit-app-region: drag;
+  position: relative;
+}
+
+/* In-App Menubar (Base Styles - Hidden by default on Mac/Windows) */
+.app-menubar {
+  display: none;
+  align-items: center;
+  gap: 2px;
+  -webkit-app-region: no-drag;
+  position: relative;
+}
+
+.menubar-item {
+  position: relative;
+}
+
+.menubar-btn {
+  background: transparent;
+  border: none;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
+  padding: 4px 8px;
+  border-radius: var(--platform-radius-sm, 4px);
+  cursor: pointer;
+  outline: none;
+  transition: background-color 0.12s ease, color 0.12s ease;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.menubar-btn:hover,
+.menubar-btn.active {
+  background-color: var(--bg-hover);
+}
+
+.menubar-dropdown {
+  display: none;
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  min-width: 220px;
+  background-color: var(--bg-panel);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--platform-radius-md, 6px);
+  box-shadow: var(--shadow-lg);
+  padding: 4px;
+  z-index: 1000;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.menubar-dropdown.active {
+  display: flex;
+}
+
+.menu-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 6px 10px;
+  border: none;
+  background: transparent;
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 12px;
+  border-radius: var(--platform-radius-sm, 4px);
+  cursor: pointer;
+  outline: none;
+  text-align: left;
+  transition: background-color 0.1s ease, color 0.1s ease;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.menu-row:hover {
+  background-color: var(--bg-selected);
+  color: var(--bg-selected-text);
+}
+
+.menu-row:hover .menu-shortcut {
+  color: var(--bg-selected-text);
+  opacity: 0.9;
+}
+
+.menu-label {
+  flex: 1;
+}
+
+.menu-shortcut {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-family: var(--font-mono, monospace);
+  margin-left: 16px;
+}
+
+.menu-divider {
+  height: 1px;
+  background-color: var(--border-subtle);
+  margin: 4px 2px;
 }
 
 /* Workspace Segmented Tabs */

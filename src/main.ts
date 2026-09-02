@@ -195,7 +195,6 @@ if (platform.platform() !== "linux") {
       submenu: [
         { label: "References", accelerator: "CmdOrCtrl+1", action: "view-references" },
         { label: "Bibliography", accelerator: "CmdOrCtrl+2", action: "view-bibliography" },
-        { label: "Overview", accelerator: "CmdOrCtrl+3", action: "view-overview" },
         { type: "divider" },
         { label: "Toggle Theme (Light / Dark)", accelerator: "CmdOrCtrl+T", action: "toggle-theme" },
         { type: "divider" },
@@ -243,7 +242,6 @@ if (platform.platform() !== "linux") {
       "export-bibtex": "window.app.exportBibtex()",
       "view-references": "window.app.selectWorkspace('references')",
       "view-bibliography": "window.app.selectWorkspace('bibliography')",
-      "view-overview": "window.app.selectWorkspace('overview')",
       "toggle-theme": "window.app.toggleTheme()",
       "open-guide": "window.app.openGuideDialog()",
       "open-about": "window.app.openAboutDialog()",

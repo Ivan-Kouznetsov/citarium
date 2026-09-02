@@ -119,10 +119,6 @@ test.describe("OS Modals, File Choosers, Native Dialogs, and OS Actions", () => 
     await page.keyboard.press(`${modKey}+2`);
     await expect(page.locator("#workspace-bibliography")).toBeVisible();
 
-    // Switch to Overview (Mod+3)
-    await page.keyboard.press(`${modKey}+3`);
-    await expect(page.locator("#workspace-overview")).toBeVisible();
-
     // Switch to References (Mod+1)
     await page.keyboard.press(`${modKey}+1`);
     await expect(page.locator("#workspace-references")).toBeVisible();

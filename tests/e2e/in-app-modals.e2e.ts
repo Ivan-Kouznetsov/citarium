@@ -74,8 +74,8 @@ test.describe("In-App Modals and Interactive Dialogs", () => {
     await expect(citationItem).toBeVisible();
   });
 
-  test("Quote / Idea Modal: Add new quote entry to Annotation Studio ideas table", async ({ page }) => {
-    // Add citation and navigate to Annotation Studio
+  test("Quote / Idea Modal: Add new quote entry to Annotations ideas table", async ({ page }) => {
+    // Add citation and navigate to Annotations
     await page.locator(".sidebar-panel button", { hasText: "+ Add" }).click();
     await page.locator("#sub-tab-annot").click();
 

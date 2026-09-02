@@ -73,7 +73,6 @@
         <div class="menubar-dropdown" id="dropdown-view" role="menu">
           <button class="menu-row" onclick="app.selectWorkspace('references')"><span class="menu-label">References</span><span class="menu-shortcut">Ctrl+1</span></button>
           <button class="menu-row" onclick="app.selectWorkspace('bibliography')"><span class="menu-label">Bibliography</span><span class="menu-shortcut">Ctrl+2</span></button>
-          <button class="menu-row" onclick="app.selectWorkspace('overview')"><span class="menu-label">Overview</span><span class="menu-shortcut">Ctrl+3</span></button>
           <div class="menu-divider"></div>
           <button class="menu-row" onclick="app.toggleTheme()"><span class="menu-label">Toggle Theme (Light / Dark)</span><span class="menu-shortcut">Ctrl+T</span></button>
         </div>
@@ -95,8 +94,6 @@
         onclick="app.selectWorkspace('references')">References (1)</button>
       <button id="tab-btn-bib" class="tab-btn" role="tab" aria-selected="false"
         onclick="app.selectWorkspace('bibliography')">Bibliography (2)</button>
-      <button id="tab-btn-overview" class="tab-btn" role="tab" aria-selected="false"
-        onclick="app.selectWorkspace('overview')">Overview (3)</button>
     </nav>
   </header>
 
@@ -143,14 +140,13 @@
         </ul>
       </aside>
 
-      <!-- Detail Panel (Sub-tabs: Reference Form & Annotation Studio) -->
+      <!-- Detail Panel (Sub-tabs: Reference Form & Annotations) -->
       <section class="detail-panel">
         <div class="sub-header">
           <div class="sub-tabs">
             <button id="sub-tab-ref" class="sub-tab-btn active" onclick="app.selectSubTab('reference')">Reference
               Details</button>
-            <button id="sub-tab-annot" class="sub-tab-btn" onclick="app.selectSubTab('annotation')">Annotation
-              Studio</button>
+            <button id="sub-tab-annot" class="sub-tab-btn" onclick="app.selectSubTab('annotation')">Annotations</button>
           </div>
           <div>
             <button class="btn btn-secondary btn-sm" onclick="app.duplicateCitation()">Duplicate</button>
@@ -292,7 +288,7 @@
           </div>
         </div>
 
-        <!-- SUB-TAB 2: Annotation Studio -->
+        <!-- SUB-TAB 2: Annotations -->
         <div id="sub-content-annot" class="detail-content" style="display: none;">
           <!-- Metadata Bar -->
           <div class="form-row form-group"
@@ -400,69 +396,6 @@
 
       <textarea id="compiled-bibliography-text" class="form-textarea"
         style="flex: 1; font-family: var(--font-mono); font-size: 12px; line-height: 1.6;" readonly></textarea>
-    </div>
-  </main>
-
-  <!-- WORKSPACE 3: Project Overview -->
-  <main id="workspace-overview" class="main-workspace">
-    <div class="full-panel">
-      <div style="margin-bottom: 20px;">
-        <h2 id="overview-title" style="font-size: 20px; font-weight: 700; margin-bottom: 4px;">Project Overview</h2>
-        <div id="overview-author" style="font-size: 13px; color: var(--text-muted); margin-bottom: 4px;">Researcher: -
-        </div>
-        <p id="overview-desc" style="font-size: 13px; color: var(--text-secondary);">Description: -</p>
-      </div>
-
-      <!-- Stat Cards -->
-      <div class="overview-grid">
-        <div class="stat-card">
-          <div class="stat-card-title">Citations</div>
-          <div id="stat-citations" class="stat-card-value">0</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-card-title">Annotation Words</div>
-          <div id="stat-words" class="stat-card-value">0</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-card-title">Quotes & Ideas</div>
-          <div id="stat-quotes" class="stat-card-value">0</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-card-title">Avg Source Rating</div>
-          <div id="stat-rating" class="stat-card-value">★ 0.0</div>
-        </div>
-      </div>
-
-      <!-- Tables Row -->
-      <div style="display: flex; gap: 20px; flex: 1;">
-        <div
-          style="flex: 1; background: var(--bg-panel); padding: 14px; border-radius: var(--platform-radius-lg); border: 1px solid var(--border-subtle);">
-          <h3 style="font-size: 13px; font-weight: 700; margin-bottom: 10px;">Sources by Entry Type</h3>
-          <table class="ideas-table">
-            <thead>
-              <tr>
-                <th>Source Type</th>
-                <th>Count</th>
-              </tr>
-            </thead>
-            <tbody id="overview-type-table"></tbody>
-          </table>
-        </div>
-
-        <div
-          style="flex: 1; background: var(--bg-panel); padding: 14px; border-radius: var(--platform-radius-lg); border: 1px solid var(--border-subtle);">
-          <h3 style="font-size: 13px; font-weight: 700; margin-bottom: 10px;">Sources by Reading Status</h3>
-          <table class="ideas-table">
-            <thead>
-              <tr>
-                <th>Status</th>
-                <th>Count</th>
-              </tr>
-            </thead>
-            <tbody id="overview-status-table"></tbody>
-          </table>
-        </div>
-      </div>
     </div>
   </main>
 

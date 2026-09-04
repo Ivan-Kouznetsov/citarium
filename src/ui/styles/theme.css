@@ -549,7 +549,7 @@ body {
   background-color: var(--bg-subtle);
 }
 
-/* Compiled Bibliography & Overview */
+/* Compiled Bibliography */
 .full-panel {
   flex: 1;
   padding: 20px;
@@ -559,35 +559,6 @@ body {
   overflow-y: auto;
   user-select: text;
   -webkit-user-select: text;
-}
-
-.overview-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 12px;
-  margin-bottom: 20px;
-}
-
-.stat-card {
-  background-color: var(--bg-panel);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--platform-radius-lg);
-  padding: 14px;
-  box-shadow: var(--shadow-sm);
-}
-
-.stat-card-title {
-  font-size: 11px;
-  color: var(--text-muted);
-  font-weight: 600;
-  text-transform: uppercase;
-}
-
-.stat-card-value {
-  font-size: 20px;
-  font-weight: 700;
-  color: var(--text-primary);
-  margin-top: 4px;
 }
 
 /* Modals */

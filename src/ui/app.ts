@@ -31,7 +31,7 @@ window.electrobun = electrobun;
 export class CitariumApp {
   project: Project;
   selectedCitationId: string | null = null;
-  currentWorkspace: "references" | "bibliography" | "overview" = "references";
+  currentWorkspace: "references" | "bibliography" = "references";
   currentSubTab: "reference" | "annotation" = "reference";
   isModified: boolean = false;
 
@@ -387,9 +387,6 @@ export class CitariumApp {
       } else if (modKey && e.key === "2") {
         e.preventDefault();
         this.selectWorkspace("bibliography");
-      } else if (modKey && e.key === "3") {
-        e.preventDefault();
-        this.selectWorkspace("overview");
       }
     });
 
@@ -536,7 +533,7 @@ export class CitariumApp {
         const citationItem = target.closest(".citation-item") as HTMLElement | null;
         const citationId = citationItem?.getAttribute("data-citation-id");
 
-        // Case 3: Quote Row in Annotation Studio
+        // Case 3: Quote Row in Annotations
         const quoteRow = target.closest("[data-quote-id]") as HTMLElement | null;
         const quoteId = quoteRow?.getAttribute("data-quote-id");
 
@@ -721,19 +718,17 @@ export class CitariumApp {
   }
 
   // --- Workspaces & Sub-tabs Navigation ---
-  selectWorkspace(ws: "references" | "bibliography" | "overview"): void {
+  selectWorkspace(ws: "references" | "bibliography"): void {
     this.currentWorkspace = ws;
-    ["references", "bibliography", "overview"].forEach((w) => {
+    ["references", "bibliography"].forEach((w) => {
       const el = document.getElementById(`workspace-${w}`);
-      const btn = document.getElementById(`tab-btn-${w === "references" ? "refs" : w === "bibliography" ? "bib" : "overview"}`);
+      const btn = document.getElementById(`tab-btn-${w === "references" ? "refs" : "bib"}`);
       if (el) el.classList.toggle("active", w === ws);
       if (btn) btn.classList.toggle("active", w === ws);
     });
 
     if (ws === "bibliography") {
       this.renderCompiledBibliography();
-    } else if (ws === "overview") {
-      this.renderOverview();
     }
   }
 
@@ -904,7 +899,7 @@ export class CitariumApp {
     }
   }
 
-  // --- Reference Form & Annotation Studio Sync ---
+  // --- Reference Form & Annotations Sync ---
   loadSelectedCitationIntoForm(): void {
     const cit = this.getSelectedCitation();
 
@@ -1490,59 +1485,6 @@ export class CitariumApp {
     }
   }
 
-  // --- Overview Workspace ---
-  renderOverview(): void {
-    const titleEl = document.getElementById("overview-title");
-    const authorEl = document.getElementById("overview-author");
-    const descEl = document.getElementById("overview-desc");
-
-    if (titleEl) titleEl.innerText = this.project.title;
-    if (authorEl) authorEl.innerText = `Researcher: ${this.project.author || "Not specified"}`;
-    if (descEl) descEl.innerText = this.project.description || "No description provided.";
-
-    const citCount = this.project.citations.length;
-    const wordCount = this.project.getTotalAnnotationWordCount();
-    const quotesCount = this.project.citations.reduce((acc, c) => acc + c.annotation.quotes.length, 0);
-
-    const ratings = this.project.citations.map((c) => c.annotation.rating).filter((r) => r > 0);
-    const avgRating = ratings.length > 0 ? ratings.reduce((a, b) => a + b, 0) / ratings.length : 0;
-
-    const statCits = document.getElementById("stat-citations");
-    const statWords = document.getElementById("stat-words");
-    const statQuotes = document.getElementById("stat-quotes");
-    const statRating = document.getElementById("stat-rating");
-
-    if (statCits) statCits.innerText = String(citCount);
-    if (statWords) {
-      if (this.project.targetWordCount > 0) {
-        const pct = Math.round((wordCount / this.project.targetWordCount) * 100);
-        statWords.innerText = `${wordCount.toLocaleString()} / ${this.project.targetWordCount.toLocaleString()} (${pct}%)`;
-      } else {
-        statWords.innerText = `${wordCount.toLocaleString()} Words`;
-      }
-    }
-    if (statQuotes) statQuotes.innerText = String(quotesCount);
-    if (statRating) statRating.innerText = `★ ${avgRating.toFixed(1)}`;
-
-    // Type Breakdown Table
-    const typeTable = document.getElementById("overview-type-table");
-    if (typeTable) {
-      const typeCounts = this.project.getTypeCounts();
-      typeTable.innerHTML = Object.entries(typeCounts)
-        .map(([type, count]) => `<tr><td>${type.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase())}</td><td><strong>${count}</strong></td></tr>`)
-        .join("");
-    }
-
-    // Status Breakdown Table
-    const statusTable = document.getElementById("overview-status-table");
-    if (statusTable) {
-      const statusCounts = this.project.getStatusCounts();
-      statusTable.innerHTML = Object.entries(statusCounts)
-        .map(([status, count]) => `<tr><td>${status}</td><td><strong>${count}</strong></td></tr>`)
-        .join("");
-    }
-  }
-
   // --- File & Project Operations ---
   async newProject(): Promise<void> {
     if (this.isModified) {
@@ -1911,6 +1853,10 @@ export class CitariumApp {
 
   openGuideDialog(): void {
     this.openModal("modal-guide");
+  }
+
+  openAboutDialog(): void {
+    this.openModal("modal-about");
   }
 
   escapeHtml(str: string): string {

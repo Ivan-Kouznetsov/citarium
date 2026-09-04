@@ -13,17 +13,16 @@ test.describe("UI Widgets Presence and Initial State", () => {
 
     const refsTab = page.locator("#tab-btn-refs");
     const bibTab = page.locator("#tab-btn-bib");
-    const overviewTab = page.locator("#tab-btn-overview");
 
     await expect(refsTab).toBeVisible();
     await expect(refsTab).toHaveClass(/active/);
     await expect(bibTab).toBeVisible();
-    await expect(overviewTab).toBeVisible();
+    await expect(page.locator("#tab-btn-overview")).toHaveCount(0);
 
     // Default workspace is references
     await expect(page.locator("#workspace-references")).toBeVisible();
     await expect(page.locator("#workspace-bibliography")).not.toBeVisible();
-    await expect(page.locator("#workspace-overview")).not.toBeVisible();
+    await expect(page.locator("#workspace-overview")).toHaveCount(0);
 
     // Switch to Bibliography
     await bibTab.click();
@@ -31,12 +30,6 @@ test.describe("UI Widgets Presence and Initial State", () => {
     await expect(refsTab).not.toHaveClass(/active/);
     await expect(page.locator("#workspace-bibliography")).toBeVisible();
     await expect(page.locator("#workspace-references")).not.toBeVisible();
-
-    // Switch to Overview
-    await overviewTab.click();
-    await expect(overviewTab).toHaveClass(/active/);
-    await expect(page.locator("#workspace-overview")).toBeVisible();
-    await expect(page.locator("#workspace-bibliography")).not.toBeVisible();
 
     // Switch back to References
     await refsTab.click();
@@ -137,7 +130,7 @@ test.describe("UI Widgets Presence and Initial State", () => {
     await expect(page.locator("#form-report-number")).toBeVisible();
   });
 
-  test("Annotation Studio Workspace: All metadata, evaluation textareas, and quotes table are present", async ({ page }) => {
+  test("Annotations Workspace: All metadata, evaluation textareas, and quotes table are present", async ({ page }) => {
     await page.locator("#sub-tab-annot").click();
 
     await expect(page.locator("#annot-status")).toBeVisible();
@@ -163,24 +156,5 @@ test.describe("UI Widgets Presence and Initial State", () => {
     const output = page.locator("#compiled-bibliography-text");
     await expect(output).toBeVisible();
     await expect(output).toHaveAttribute("readonly", "");
-  });
-
-  test("Project Overview Workspace: Title, Researcher, 4 Stat Cards, and 2 Breakdown Tables are present", async ({ page }) => {
-    await page.locator("#tab-btn-overview").click();
-
-    await expect(page.locator("#overview-title")).toBeVisible();
-    await expect(page.locator("#overview-author")).toBeVisible();
-    await expect(page.locator("#overview-desc")).toBeVisible();
-
-    // 4 Stat Cards
-    await expect(page.locator("#stat-citations")).toBeVisible();
-    await expect(page.locator("#stat-words")).toBeVisible();
-    await expect(page.locator("#stat-quotes")).toBeVisible();
-    await expect(page.locator("#stat-rating")).toBeVisible();
-
-    // 2 Breakdown Tables in overview
-    const overviewTables = page.locator("#workspace-overview table");
-    await expect(overviewTables.first()).toBeVisible();
-    await expect(overviewTables.nth(1)).toBeVisible();
   });
 });

@@ -1,4 +1,4 @@
-import { test as baseTest, expect, Page } from "@playwright/test";
+import { test as baseTest, expect, type Page } from "@playwright/test";
 
 export type SupportedPlatform = "win32" | "darwin" | "linux";
 

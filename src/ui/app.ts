@@ -758,6 +758,40 @@ export class CitariumApp {
     document.title = `${this.project.title}${modified} — Citarium`;
   }
 
+  updateWordCounts(): void {
+    const totalWords = this.project.getTotalAnnotationWordCount();
+    const totalWordsFormatted = totalWords.toLocaleString();
+
+    let totalWordsDisplay = `${totalWordsFormatted} words`;
+    if (this.project.targetWordCount > 0) {
+      const pct = Math.round((totalWords / this.project.targetWordCount) * 100);
+      totalWordsDisplay = `${totalWordsFormatted} / ${this.project.targetWordCount.toLocaleString()} words (${pct}%)`;
+    }
+
+    const sidebarCountEl = document.getElementById("sidebar-word-count");
+    if (sidebarCountEl) {
+      const citCount = this.project.citations.length;
+      const countLabel = citCount === 1 ? "1 source" : `${citCount} sources`;
+      sidebarCountEl.innerText = `${totalWordsDisplay} total · ${countLabel}`;
+    }
+
+    const bibWordCountEl = document.getElementById("bib-total-word-count");
+    if (bibWordCountEl) {
+      bibWordCountEl.innerText = `Total: ${totalWordsFormatted} words`;
+    }
+
+    const annotWordCountEl = document.getElementById("annot-source-word-counter");
+    if (annotWordCountEl) {
+      const cit = this.getSelectedCitation();
+      if (cit) {
+        const wc = cit.getWordCount();
+        annotWordCountEl.innerText = wc === 1 ? "1 word" : `${wc.toLocaleString()} words`;
+      } else {
+        annotWordCountEl.innerText = "0 words";
+      }
+    }
+  }
+
   updateTagOptions(): void {
     const select = document.getElementById("filter-tag") as HTMLSelectElement | null;
     if (!select) return;
@@ -839,6 +873,9 @@ export class CitariumApp {
         const status = c.annotation.status || "To Read";
         const rating = c.annotation.rating > 0 ? "★".repeat(c.annotation.rating) : "";
 
+        const wordCount = c.getWordCount();
+        const wordCountStr = wordCount === 1 ? "1 word" : `${wordCount.toLocaleString()} words`;
+
         let badgeClass = "badge";
         if (status === "Key Source") badgeClass += " badge-key";
         else if (status === "Annotated") badgeClass += " badge-annotated";
@@ -849,12 +886,15 @@ export class CitariumApp {
             <div class="citation-item-title">${this.escapeHtml(title)}</div>
             <div class="citation-item-meta">
               <span class="${badgeClass}">${this.escapeHtml(status)}</span>
+              <span class="badge badge-word-count">${wordCountStr}</span>
               <span style="color: #f59e0b;">${rating}</span>
             </div>
           </li>
         `;
       })
       .join("");
+
+    this.updateWordCounts();
   }
 
   selectCitation(citationId: string): void {
@@ -939,6 +979,7 @@ export class CitariumApp {
       if (previewRef) previewRef.innerText = "No reference selected.";
       if (previewInText) previewInText.innerText = "In-text: (n.d.)";
       this.renderIdeasTable([]);
+      this.updateWordCounts();
       return;
     }
 
@@ -971,6 +1012,7 @@ export class CitariumApp {
     this.updatePreview();
     this.renderIdeasTable(cit.annotation.quotes);
     this.triggerUrlCheck(cit);
+    this.updateWordCounts();
   }
 
   updateFieldLabels(entryType: string): void {
@@ -1228,6 +1270,8 @@ export class CitariumApp {
     this.renderIdeasTable(cit.annotation.quotes);
     this.closeModal("modal-quote");
     this.updateProjectBadge();
+    this.renderCitationList();
+    this.updateWordCounts();
   }
 
   deleteQuote(quoteId: string): void {
@@ -1237,6 +1281,8 @@ export class CitariumApp {
     this.isModified = true;
     this.renderIdeasTable(cit.annotation.quotes);
     this.updateProjectBadge();
+    this.renderCitationList();
+    this.updateWordCounts();
   }
 
   // --- Manage Authors / Editors Modal ---

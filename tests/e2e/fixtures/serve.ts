@@ -49,6 +49,24 @@ export async function createTestServer(port = 4567) {
         }
       }
 
+      if (pathname.startsWith("/assets/")) {
+        const assetPath = join(UI_DIR, pathname);
+        if (existsSync(assetPath)) {
+          const ext = pathname.split(".").pop()?.toLowerCase();
+          const contentType =
+            ext === "png"
+              ? "image/png"
+              : ext === "ico"
+              ? "image/x-icon"
+              : ext === "svg"
+              ? "image/svg+xml"
+              : "application/octet-stream";
+          return new Response(readFileSync(assetPath), {
+            headers: { "Content-Type": contentType },
+          });
+        }
+      }
+
       if (pathname.startsWith("/examples/")) {
         const exampleFile = pathname.replace(/^\/examples\//, "");
         const filePath = join(EXAMPLES_DIR, exampleFile);

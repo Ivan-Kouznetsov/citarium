@@ -292,4 +292,9 @@ export class Citation {
 
     return false;
   }
+
+  /** Calculate word count for this citation's annotation. */
+  getWordCount(): number {
+    return this.annotation.getWordCount();
+  }
 }

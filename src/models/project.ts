@@ -191,13 +191,6 @@ export class Project {
 
   /** Calculate total words across all annotations in this project. */
   getTotalAnnotationWordCount(): number {
-    let total = 0;
-    for (const c of this.citations) {
-      const text = c.annotation.fullAnnotationText();
-      if (text) {
-        total += text.split(/\s+/).filter(Boolean).length;
-      }
-    }
-    return total;
+    return this.citations.reduce((total, c) => total + c.getWordCount(), 0);
   }
 }

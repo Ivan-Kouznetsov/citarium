@@ -100,4 +100,11 @@ describe("Application Icons for macOS, Windows, Linux, and Web", () => {
     expect(configContent).toContain('"assets/icon.png"');
     expect(configContent).toContain('"src/ui/assets/icon-32.png"');
   });
+
+  it("should provide root-level icon assets for default Electrobun/Hutch packaging", () => {
+    expect(fs.existsSync(path.join(rootDir, "icon.ico"))).toBe(true);
+    expect(fs.existsSync(path.join(rootDir, "icon.png"))).toBe(true);
+    expect(fs.existsSync(path.join(rootDir, "icon.icns"))).toBe(true);
+    expect(fs.existsSync(path.join(rootDir, "icon.iconset"))).toBe(true);
+  });
 });

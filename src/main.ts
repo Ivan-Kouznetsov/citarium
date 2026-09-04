@@ -3,6 +3,7 @@ import { loadProject, saveProject, loadSettings, saveSettings } from "./io";
 import { Project } from "./models";
 import type { CitariumRPC } from "./rpc-types";
 import platform from "os";
+import { applyWindowsAppIcon, setAppUserModelId } from "./platform/windows-icon";
 
 const citariumRPC = BrowserView.defineRPC<CitariumRPC>({
   maxRequestTime: 300000,
@@ -113,6 +114,10 @@ const isDebugMode =
   process.env.CITARIUM_DEBUG === "1" ||
   process.env.DEBUG === "1";
 
+if (platform.platform() === "win32") {
+  setAppUserModelId("ca.ivank.app.citarium");
+}
+
 const mainWindow = new BrowserWindow({
   title: "Citarium",
   url: `views://mainview/index.html?platform=${hostPlatform}${isDebugMode ? "&debug=1" : ""}`,
@@ -124,6 +129,10 @@ const mainWindow = new BrowserWindow({
     y: 80,
   },
 });
+
+if (platform.platform() === "win32") {
+  applyWindowsAppIcon(mainWindow.ptr, "Citarium");
+}
 
 // Intercept window close to prompt for unsaved/modified changes
 mainWindow.on("will-close", (event: unknown) => {

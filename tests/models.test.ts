@@ -117,6 +117,18 @@ describe("Annotation and Quote Models", () => {
     expect(restored.status).toBe("Key Source");
     expect(restored.tags).toEqual(["attachment", "feline"]);
   });
+
+  it("calculates annotation word count accurately", () => {
+    const emptyAnn = new Annotation();
+    expect(emptyAnn.getWordCount()).toBe(0);
+
+    const ann = new Annotation({
+      summary: "This is a five word summary.",
+      evaluation: "Strong methodology.",
+    });
+    // summary: 6 words, evaluation: "Evaluation: Strong methodology." -> 3 words = 9 words
+    expect(ann.getWordCount()).toBe(9);
+  });
 });
 
 describe("Citation Model", () => {
@@ -186,6 +198,7 @@ describe("Project Model", () => {
 
     expect(proj.getAllTags()).toEqual(["ethics"]);
     expect(proj.getStatusCounts()["Reading"]).toBe(1);
+    expect(cit.getWordCount()).toBe(5);
     expect(proj.getTotalAnnotationWordCount()).toBe(5);
 
     proj.removeCitation(cit.id);

@@ -206,4 +206,11 @@ export class Annotation {
     }
     return parts.join("\n\n");
   }
+
+  /** Calculate word count for this annotation. */
+  getWordCount(): number {
+    const text = this.fullAnnotationText();
+    if (!text) return 0;
+    return text.split(/\s+/).filter(Boolean).length;
+  }
 }

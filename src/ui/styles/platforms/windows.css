@@ -111,6 +111,17 @@
   user-select: none;
 }
 
+[data-platform="windows"] .sidebar-word-count {
+  font-size: 11px;
+  color: var(--text-secondary);
+  background-color: var(--bg-sidebar);
+}
+
+[data-platform="windows"] .annot-word-counter {
+  color: var(--accent-color);
+  font-size: 12.5px;
+}
+
 [data-platform="windows"] .window-controls-win {
   display: flex !important;
   align-items: stretch;

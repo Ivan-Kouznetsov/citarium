@@ -133,6 +133,7 @@
               <option value="Date Added">Date Added</option>
             </select>
           </div>
+          <div class="sidebar-word-count" id="sidebar-word-count">0 words total · 0 sources</div>
         </div>
 
         <ul id="citation-list" class="citation-list">
@@ -320,6 +321,10 @@
               <input type="text" id="annot-tags" class="form-input" placeholder="e.g. alignment, policy, empirical"
                 oninput="app.onAnnotChange('tags')">
             </div>
+            <div style="flex: 1; min-width: 90px;">
+              <label class="form-label">Word Count</label>
+              <div class="annot-word-counter" id="annot-source-word-counter">0 words</div>
+            </div>
           </div>
 
           <!-- Summary -->
@@ -392,6 +397,7 @@
           <option value="bibtex">BibTeX Entries</option>
         </select>
         <button class="btn btn-primary btn-sm" onclick="app.copyCompiledBibliography()">Copy Formatted Text</button>
+        <span class="bib-word-count" id="bib-total-word-count">Total: 0 words</span>
       </div>
 
       <textarea id="compiled-bibliography-text" class="form-textarea"
